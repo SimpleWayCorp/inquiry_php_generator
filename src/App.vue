@@ -9,23 +9,33 @@
             <label class="custom-file-label" for="inputFile">Choose file</label>
           </div>
         </div>
+        {{ errorMsgs.formName }}
+
         <div class="row mb-3">
           <label class="col-5">フォーム名</label>
           <div class="col-7 p-0">
-            <input v-model="formName" class="col-12 form-control" type="text">
-            <div class="form-text">※ 半角英数字・ハイフン・アンダースコアのみ</div>
+              <input v-model="formName" :class="{ 'is-invalid': true }" class="form-control" type="text">
+              <!-- <span v-if="errorMsgs.formName.length" class="invalid-feedback">{{ errorMsgs.formName }}</span> -->
+              <div class="form-text">※ 半角英数字・ハイフン・アンダースコアのみ</div>
           </div>
         </div>
-        <label-form v-model="subject"></label-form>
-        {{ subject }}
-        <!-- <div class="row mb-3">
+
+        <div class="row mb-3">
           <label class="col-5">自動返信メール件名</label>
-          <div class="col-7 p-0"><input v-model="subject" class="form-control" type="text"></div>
-        </div> -->
+          <div class="col-7 p-0">
+              <input v-model="subject" :class="{ 'is-invalid': true }" class="form-control" type="text">
+              <!-- <span v-if="errorMsgs.subject.length" class="invalid-feedback">{{ errorMsgs.subject }}</span> -->
+          </div>
+        </div>
+
         <div class="row mb-3">
           <label class="col-5">自動返信メールFROM</label>
-          <div class="col-7 p-0"><input class="form-control" type="text"></div>
+          <div class="col-7 p-0">
+              <input v-model="from" :class="{ 'is-invalid': true }" class="form-control" type="text">
+              <!-- <span v-if="errorMsgs.from.length" class="invalid-feedback">{{ errorMsgs.from }}</span> -->
+          </div>
         </div>
+
         <div class="row mb-3">
           <label class="col-5">自動返信メールBCC</label>
           <div class="col-7 p-0">
@@ -38,27 +48,34 @@
             </div>
           </div>
         </div>
+
         <div class="row mb-3">
           <label class="col-5">ドキュメントルートディレクトリパス</label>
           <div class="col-7 p-0">
-            <input class="form-control" type="text">
-            <div class="form-text">※ 絶対パス</div>
+              <input v-model="publicPath" :class="{ 'is-invalid': true }" class="form-control" type="text">
+              <!-- <span v-if="errorMsgs.publicPath.length" class="invalid-feedback">{{ errorMsgs.publicPath }}</span> -->
+              <div class="form-text">※ 絶対パス</div>
           </div>
         </div>
+
         <div class="row mb-3">
           <label class="col-5">ライブラリディレクトリパス</label>
           <div class="col-7 p-0">
-            <input class="form-control" type="text">
-            <div class="form-text">※ 絶対パス</div>
+              <input v-model="privatePath" :class="{ 'is-invalid': true }" class="form-control" type="text">
+              <!-- <span v-if="errorMsgs.privatePath.length" class="invalid-feedback">{{ errorMsgs.privatePath }}</span> -->
+              <div class="form-text">※ 絶対パス</div>
           </div>
         </div>
-        <div class="row mb-4">
+
+        <div class="row mb-3">
           <label class="col-5">設置先</label>
           <div class="col-7 p-0">
-            <input class="form-control" type="text">
-            <div class="form-text">※ URLの絶対パス</div>
+              <input v-model="urlPath" :class="{ 'is-invalid': true }" class="form-control" type="text">
+              <!-- <span v-if="errorMsgs.urlPath.length" class="invalid-feedback">{{ errorMsgs.urlPath }}</span> -->
+              <div class="form-text">※ URLの絶対パス</div>
           </div>
         </div>
+
         <div class="row mb-5">
           <label class="col-3">項目</label>
           <div class="col-9 p-0">
@@ -103,7 +120,7 @@
           </div>
         </div>
         <div class="row">
-          <button @click="downLoad" class="btn btn-primary">ダウンロード</button>
+          <button @click="validate" class="btn btn-primary">ダウンロード</button>
         </div>
       </div>
     </div>
@@ -111,28 +128,35 @@
 </template>
 
 <script>
-import LabelForm from "./components/LabelForm.vue"
 
 export default {
   name: 'App',
   data(){
     return {
-      formName: "",
-      subject: "",
-      from: "",
+      formName: null,
+      subject: null,
+      from: null,
       bcc: [
         { id: 1, address: "" },
-        { id: 2, address: "" },
-        { id: 3, address: "" }
       ],
-      publicPath: "",
-      privatePath: "",
-      urlPath: "",
+      publicPath: null,
+      privatePath: null,
+      urlPath: null,
       items: [
         {
           id: 1
         }
-      ]
+      ],
+      isError: false,
+      errorMsgs: {
+        errFormName: [],
+        errSubject: [],
+        errFrom: [],
+        errBcc: [],
+        errPublicPath: [],
+        errPrivatePath: [],
+        errUrlPath: [],
+      }
     }
   },
   methods: {
@@ -155,12 +179,10 @@ export default {
     deleteItem(index){
       this.items.splice(index, 1)
     },
-    downLoad(){
-
+    validate(){
+      if(!this.formName) this.errorMsgs.formName.push("入力必須です")
+      if(!this.subject) this.errorMsgs.subject.push("入力必須です")
     }
-  },
-  components: {
-    LabelForm
   }
 }
 </script>
