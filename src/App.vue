@@ -77,8 +77,8 @@
         </div>
 
         <div class="row mb-5">
-          <label class="col-3">項目</label>
-          <div class="col-9 p-0">
+          <label class="col-2">項目</label>
+          <div class="col-10 p-0">
 
             <!-- <div v-for="item,index in items" :key="item.id" class="p-3 mb-3 pt-5 border rounded position-relative">
               <button v-if="items.length!==1" @click="deleteItem(index)" class="btn btn-danger position-absolute top-0 end-0">削除</button>
@@ -100,7 +100,7 @@
               </div>
             </div> -->
 
-            <item-type
+            <form-item
             v-for="item,index in items"
             :key="item.id"
             :propsDeleteItem="deleteItem"
@@ -108,9 +108,8 @@
             :propsItems="items"
             :propsErrMsgs="errMsgs"
             :propsChange="changeHeading"
-            ></item-type>
-            
-            {{ items }}
+            ></form-item>
+
             <div class="d-flex justify-content-center "><button @click="addItem" class="btn btn-primary">項目を追加</button></div>
           </div>
         </div>
@@ -123,15 +122,16 @@
 </template>
 
 <script>
-import ItemType from "./components/ItemType.vue"
+import FormItem from "./components/FormItem.vue"
 
 export default {
   name: 'App',
   components: {
-    ItemType
+    FormItem
   },
   data(){
     return {
+      check: [],
       formName: null,
       subject: null,
       from: null,
@@ -150,8 +150,15 @@ export default {
               { label: "ラジオボタン", value: 3 },
               { label: "チェックボタン", value: 4 },
           ],
-          heading: "",
-          itemId: "",
+          heading: null,
+          itemId: null,
+          rules: [],
+          relatedIds: [],
+          maxLength: null,
+          minValue: null,
+          maxValue: null,
+          choices: [],
+          to: false
         }
       ],
       errMsgs: {},
