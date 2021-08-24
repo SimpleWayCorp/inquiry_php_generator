@@ -80,35 +80,17 @@
           <label class="col-2">項目</label>
           <div class="col-10 p-0">
 
-            <!-- <div v-for="item,index in items" :key="item.id" class="p-3 mb-3 pt-5 border rounded position-relative">
-              <button v-if="items.length!==1" @click="deleteItem(index)" class="btn btn-danger position-absolute top-0 end-0">削除</button>
-              <div class="row mb-3">
-                  <label class="form-label">見出し</label>
-                  <input class="w-100 form-control" type="text">
-              </div>
-              <div class="row mb-4">
-                  <label class="form-label">項目ID</label>
-                  <input class="form-control" type="text">
-              </div>
-              <div class="row">
-                <div v-for="type in item.types" :key="type.value" class="form-check">
-                    <label class="form-check-label">
-                        {{ type.label }}
-                        <input class="form-check-input" v-model="typeValue" type="radio" :value="type.value" :id="type.value">
-                    </label>
-                </div>
-              </div>
-            </div> -->
-
             <form-item
             v-for="item,index in items"
             :key="item.id"
-            :propsDeleteItem="deleteItem"
-            :propsIndex="index"
+            :delete-item="deleteItem"
+            :item-index="index"
             :propsItems="items"
-            :propsErrMsgs="errMsgs"
-            :propsChange="changeHeading"
+            :err-msgs="errMsgs"
+            :change-heading="changeHeading"
+            :change-typedform="changeTypedForm"
             ></form-item>
+            {{ items }}
 
             <div class="d-flex justify-content-center "><button @click="addItem" class="btn btn-primary">項目を追加</button></div>
           </div>
@@ -166,6 +148,15 @@ export default {
     }
   },
   methods: {
+    changeTypedForm(typedForm, index){
+      this.items[index].rules = typedForm.rules
+      this.items[index].maxLength = typedForm.maxLength
+      this.items[index].minValue = typedForm.minValue
+      this.items[index].maxValue = typedForm.maxValue
+      this.items[index].choices = typedForm.choices
+      this.items[index].relatedIds = typedForm.relatedIds
+      this.items[index].to = typedForm.to
+    },
     changeHeading(index, heading, itemId){
       this.items[index].heading = heading
       this.items[index].itemId = itemId
@@ -197,29 +188,39 @@ export default {
     deleteItem(index){
       this.items.splice(index, 1)
     },
-    initialize(){
-      this.errFormName = []
-      this.errSubject = []
-      this.errFrom = []
-      this.errPublicPath = []
-      this.errPrivatePath = []
-      this.errUrlPath = []
-    },
+    //未入力チェック
     unenteredCheck(checkForm, key){
       if(!checkForm) this.errMsgs[key] = "入力必須です"
     },
+    //整数チェック
+    integerCheck(checkForm, key){
+      const pattern = new RegExp("^[0-9]+$")
+      if(!pattern.test(checkForm) && checkForm){
+        this.errMsgs[key] = "整数で入力してください"
+      }
+    },
+    //自然数チェック
+    naturalNumberCheck(checkForm, key){
+      const pattern = new RegExp("^[1-9][0-9]*$")
+      if(!pattern.test(checkForm) && checkForm){
+        this.errMsgs[key] = "自然数で入力してください"
+      }
+    },
+    //半角英数字チェック（ハイフン、アンダースコアあり）
     halfAlphanumericCheck(checkForm, key){
       const pattern = new RegExp("^[\\w\\-]+$", "g")
       if(!pattern.test(checkForm) && checkForm){
         this.errMsgs[key] = "半角英数字で入力してください"
       }
     },
+    //メール形式チェック
     mailCheck(checkForm, key){
       const pattern = new RegExp("^[a-zA-Z0-9_.+-]+@([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\\.)+[a-zA-Z]{2,}$", "g")
       if(!pattern.test(checkForm) && checkForm){
         this.errMsgs[key] = "mail形式で入力してください"
       }
     },
+    //ディレクトリチェック（/から始まるか）
     directoryCheck(checkForm, key){
       const pattern = new RegExp("^\\/", "g")
       if(!pattern.test(checkForm) && checkForm){
@@ -237,9 +238,11 @@ export default {
       this.unenteredCheck(this.publicPath, "publicPath")
       this.unenteredCheck(this.privatePath, "privatePath")
       this.unenteredCheck(this.urlPath, "urlPath")
+
       for(let i=0; i<this.bcc.length; i++){
         this.unenteredCheck(this.bcc[i].address, `bcc${i}`)
       }
+
       for(let i=0; i<this.items.length; i++){
         this.unenteredCheck(this.items[i].heading, `heading${i}`)
         this.unenteredCheck(this.items[i].itemId, `itemId${i}`)
@@ -262,6 +265,21 @@ export default {
       this.directoryCheck(this.publicPath, "publicPath")
       this.directoryCheck(this.privatePath, "privatePath")
       this.directoryCheck(this.urlPath, "urlPath")
+
+      //項目入力チェック
+      for(let i=0; i<this.items.length; i++){
+        if(this.items[i].rules.some(rule => rule==="maxLength")){
+          this.naturalNumberCheck(this.items[i].maxLength, `maxLength${i}`)
+        }
+
+        if(this.items[i].rules.some(rule => rule==="minValue")){
+          this.integerCheck(this.items[i].minValue, `minValue${i}`)
+        }
+
+        if(this.items[i].rules.some(rule => rule==="maxValue")){
+          this.integerCheck(this.items[i].maxValue, `maxValue${i}`)
+        }
+      }
 
       if(!Object.keys(this.errMsgs).length){
         alert("download")
