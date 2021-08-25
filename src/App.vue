@@ -5,7 +5,7 @@
         <div class="row mb-3 form-group">
           <label class="col-5">既存の構成をインポート</label>
           <div class="custom-file col-7">
-            <input type="file" class="custom-file-input" id="inputFile">
+            <input name="configFile" type="file" @change="fileChange" id="inputFile">
             <label class="custom-file-label" for="inputFile">Choose file</label>
           </div>
         </div>
@@ -82,12 +82,13 @@
 
             <form-item
             v-for="item,index in items"
-            :key="item.id"
+            :key="item.itemId"
             :delete-item="deleteItem"
             :item-index="index"
-            :propsItems="items"
+            :props-items="items"
+            :props-item="item"
             :err-msgs="errMsgs"
-            :change-heading="changeHeading"
+            :change-label="changeLabel"
             :change-typedform="changeTypedForm"
             ></form-item>
             {{ items }}
@@ -125,22 +126,17 @@ export default {
       urlPath: null,
       items: [
         {
-          id: 1,
-          types: [
-              { label: "テキスト", value: 1 },
-              { label: "メモ", value: 2 },
-              { label: "ラジオボタン", value: 3 },
-              { label: "チェックボタン", value: 4 },
-          ],
-          heading: null,
-          itemId: null,
+          itemId: 1,
+          label: null,
+          id: null,
           rules: [],
           relatedIds: [],
           maxLength: null,
           minValue: null,
           maxValue: null,
           choices: [],
-          to: false
+          to: false,
+          type: "text"
         }
       ],
       errMsgs: {},
@@ -148,6 +144,36 @@ export default {
     }
   },
   methods: {
+    fileChange(e){
+      const files = e.target.files
+      if(!files.length){
+        return
+      }
+      this.createForm(files[0])
+    },
+    createForm(file){
+      const reader = new FileReader()
+      const that = this
+      reader.readAsText(file)
+      reader.onload = (e) => {
+        console.log("load")
+        const configFile = JSON.parse(e.target.result)
+        that.formName = configFile.name
+        that.subject = configFile.subject
+        that.from = configFile.from
+        that.bcc = [...configFile.bcc].map((bcc, index) => {
+          return { id: index+1, address: bcc }
+        })
+        that.publicPath = configFile.publicPath
+        that.privatePath = configFile.privatePath
+        that.urlPath = configFile.urlPath
+        console.log(configFile.items)
+        that.items = [...configFile.items].map((item, index) => {
+          item.itemId = index + 1
+          return item
+        })
+      }
+    },
     changeTypedForm(typedForm, index){
       this.items[index].rules = typedForm.rules
       this.items[index].maxLength = typedForm.maxLength
@@ -156,10 +182,11 @@ export default {
       this.items[index].choices = typedForm.choices
       this.items[index].relatedIds = typedForm.relatedIds
       this.items[index].to = typedForm.to
+      this.items[index].type = typedForm.typeValue
     },
-    changeHeading(index, heading, itemId){
-      this.items[index].heading = heading
-      this.items[index].itemId = itemId
+    changeLabel(index, label, id){
+      this.items[index].label = label
+      this.items[index].id = id
     },
     addBcc(){
       const newId = this.bcc.slice(-1)[0].id+1
@@ -169,17 +196,11 @@ export default {
       })
     },
     addItem(){
-      const newId = this.items.slice(-1)[0].id + 1
+      const newId = this.items.slice(-1)[0].itemId + 1
       this.items.push({
-        id: newId,
-        types: [
-              { label: "テキスト", value: 1 },
-              { label: "メモ", value: 2 },
-              { label: "ラジオボタン", value: 3 },
-              { label: "チェックボタン", value: 4 },
-          ],
-          heading: "",
-          itemId: "",
+        itemId: newId,
+          label: "",
+          id: "",
       })
     },
     deleteBcc(index){
@@ -244,14 +265,14 @@ export default {
       }
 
       for(let i=0; i<this.items.length; i++){
-        this.unenteredCheck(this.items[i].heading, `heading${i}`)
-        this.unenteredCheck(this.items[i].itemId, `itemId${i}`)
+        this.unenteredCheck(this.items[i].label, `label${i}`)
+        this.unenteredCheck(this.items[i].id, `id${i}`)
       }
 
       //半角英数字チェック
       this.halfAlphanumericCheck(this.formName, "formName")
       for(let i=0; i<this.items.length; i++){
-        this.halfAlphanumericCheck(this.items[i].itemId, `itemId${i}`)
+        this.halfAlphanumericCheck(this.items[i].id, `id${i}`)
       }
 
       //mail形式チェック

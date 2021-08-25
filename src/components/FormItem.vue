@@ -3,13 +3,25 @@
         <button v-if="items.length!==1" @click="deleteItem(itemIndex)" class="btn btn-danger position-absolute top-0 end-0">削除</button>
         <div class="row mb-3">
             <label class="form-label">見出し</label>
-            <input v-model="heading" @input="parentChangeHeading" :class="{ 'is-invalid': errMsgs.hasOwnProperty(`heading${itemIndex}`) }" class="w-100 form-control" type="text">
-            <span v-if="errMsgs.hasOwnProperty(`heading${itemIndex}`)" class="invalid-feedback">{{ errMsgs[`heading${itemIndex}`] }}</span>
+            <input
+            v-model="label"
+            @input="parentChangeLabel"
+            :class="{ 'is-invalid': errMsgs.hasOwnProperty(`label${itemIndex}`) }"
+            class="w-100 form-control" type="text"
+            >
+            {{ propsItem.label }}
+            <span
+            v-if="errMsgs.hasOwnProperty(`label${itemIndex}`)"
+            class="invalid-feedback"
+            >
+                {{ errMsgs[`label${itemIndex}`] }}
+            </span>
         </div>
         <div class="row mb-4">
             <label class="form-label">項目ID</label>
-            <input v-model="itemId" @input="parentChangeHeading" :class="{ 'is-invalid': errMsgs.hasOwnProperty(`itemId${itemIndex}`) }" class="form-control" type="text">
-            <span v-if="errMsgs.hasOwnProperty(`itemId${itemIndex}`)" class="invalid-feedback">{{ errMsgs[`itemId${itemIndex}`] }}</span>
+            <input v-model="id" @input="parentChangeLabel" :class="{ 'is-invalid': errMsgs.hasOwnProperty(`id${itemIndex}`) }" class="form-control" type="text">
+            {{ propsItem.id }}
+            <span v-if="errMsgs.hasOwnProperty(`id${itemIndex}`)" class="invalid-feedback">{{ errMsgs[`id${itemIndex}`] }}</span>
         </div>
         <div class="row mb-3">
             <div class="col-4">タイプ</div>
@@ -68,7 +80,7 @@
                 </div>
             </div>
         </div>
-        <div v-if="typeValue===1 || typeValue===2" class="row mb-3">
+        <div v-if="typeValue==='text' || typeValue==='memo'" class="row mb-3">
             <div class="col-4">入力チェックの発動条件</div>
             <div class="row mt-2">
                 <div class="text-center mb-2">以下の項目が入力されている場合にチェックを行う</div>
@@ -86,7 +98,7 @@
                 </div>
             </div>
         </div>
-        <div v-if="typeValue===1 || typeValue===2" class="row">
+        <div v-if="typeValue==='text' || typeValue==='memo'" class="row">
             <div class="col-4">自動返信メール宛先</div>
             <div class="col-8">
                 <div class="form-check">
@@ -98,7 +110,7 @@
                 </div>
             </div>
         </div>
-        <div v-if="typeValue===3" class="row">
+        <div v-if="typeValue==='radio'" class="row">
             <label class="col-4">選択肢</label>
             <div class="col-8 p-0">
                 <div v-for="choice, index in choices" :key="choice.id" class="mb-3 input-group">
@@ -111,6 +123,7 @@
                 </div>
             </div>
         </div>
+        {{ items }}
     </div>
 </template>
 
@@ -120,41 +133,40 @@ export default {
         itemIndex: { type: Number },
         deleteItem: { type: Function },
         propsItems: { type: Array },
+        propsItem: { type: Object },
         errMsgs: { type: Object },
-        propsHeading: { type: String },
-        propsItemId: { type: String },
         value: { type: Array },
-        changeHeading: { type: Function },
-        changeTypedform: { type: Function }
+        changeLabel: { type: Function },
+        changeTypedform: { type: Function },
     },
     data(){
         return {
             items: this.propsItems,
-            itemId: null,
-            heading: null,
-            maxLength: null,
-            minValue: null,
-            maxValue: null,
+            id: this.propsItem.id || null,
+            label: this.propsItem.label || null,
+            maxLength: this.propsItem.maxLength || null,
+            minValue: this.propsItem.minValue || null,
+            maxValue: this.propsItem.maxValue || null,
             types: [
-                { label: "テキスト", value: 1 },
-                { label: "メモ", value: 2 },
-                { label: "ラジオボタン", value: 3 },
-                { label: "チェックボタン", value: 4 },
+                { label: "テキスト", value: "text" },
+                { label: "メモ", value: "memo" },
+                { label: "ラジオボタン", value: "radio" },
+                { label: "チェックボタン", value: "checkbox" },
             ],
-            typeValue: 1,
-            selectRules: [],
+            typeValue: this.propsItem.type || "text",
+            selectRules: this.propsItem.rules || [],
             relatedIds: [
                 { id: 1, relatedId: null }
             ],
             choices: [
                 { id: 1, choice: null }
             ],
-            to: false
+            to: this.propsItem.to || false
         }
     },
     computed: {
         typedRules(){
-            if (this.typeValue===1){
+            if (this.typeValue==="text"){
                 return [
                     { rule: "required", label: "必須入力" },
                     { rule: "maxLength", label: "最大文字数制限",  maxLength: true },
@@ -165,7 +177,7 @@ export default {
                     { rule: "minValue", label: "数値の最小値を制限", minValue: true },
                     { rule: "maxValue", label: "数値の最大値を制限", maxValue: true }
                 ]
-            }else if(this.typeValue===2){
+            }else if(this.typeValue==="memo"){
                 return [
                     { rule: "required", label: "必須入力" },
                     { rule: "maxLength", label: "最大文字数制限", maxLength: true },
@@ -186,7 +198,8 @@ export default {
                 maxValue: null,
                 choices: [{ id: 1, choice: null }],
                 relatedIds: [{ id: 1, relatedId: null }],
-                to: false
+                to: false,
+                typeValue: this.typeValue
             }
             this.changeTypedform(typedForm, this.itemIndex);
         },
@@ -199,12 +212,13 @@ export default {
                 maxValue: this.maxValue,
                 choices: [...this.choices],
                 relatedIds: [...this.relatedIds],
-                to: this.to
+                to: this.to,
+                typeValue: this.typeValue
             }
             this.changeTypedform(typedForm, this.itemIndex);
         },
-        parentChangeHeading(){
-            this.changeHeading(this.itemIndex, this.heading, this.itemId)
+        parentChangeLabel(){
+            this.changeLabel(this.itemIndex, this.label, this.itemId)
         },
         //==========================
         //追加処理
@@ -237,6 +251,9 @@ export default {
             this.relatedIds.splice(index, 1)
             this.parentChangeTypedform()
         }
+    },
+    mounted(){
+        console.log("form-item")
     }
 }
 </script>
