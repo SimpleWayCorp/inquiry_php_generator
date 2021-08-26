@@ -1,6 +1,6 @@
 <template>
-    <div class="p-3 mb-3 pt-5 border rounded position-relative">
-        <button v-if="items.length!==1" @click="deleteItem(itemIndex)" class="btn btn-danger position-absolute top-0 end-0">削除</button>
+    <div v-if="propsItem.itemId===itemIndex+1" class="p-3 mb-3 pt-5 border rounded position-relative">
+        <button v-if="propsItems.length!==1" @click="deleteItem(itemIndex)" class="btn btn-danger position-absolute top-0 end-0">削除</button>
         <div class="row mb-3">
             <label class="form-label">見出し</label>
             <input
@@ -9,7 +9,6 @@
             :class="{ 'is-invalid': errMsgs.hasOwnProperty(`label${itemIndex}`) }"
             class="w-100 form-control" type="text"
             >
-            {{ propsItem.label }}
             <span
             v-if="errMsgs.hasOwnProperty(`label${itemIndex}`)"
             class="invalid-feedback"
@@ -20,7 +19,6 @@
         <div class="row mb-4">
             <label class="form-label">項目ID</label>
             <input v-model="id" @input="parentChangeLabel" :class="{ 'is-invalid': errMsgs.hasOwnProperty(`id${itemIndex}`) }" class="form-control" type="text">
-            {{ propsItem.id }}
             <span v-if="errMsgs.hasOwnProperty(`id${itemIndex}`)" class="invalid-feedback">{{ errMsgs[`id${itemIndex}`] }}</span>
         </div>
         <div class="row mb-3">
@@ -42,39 +40,39 @@
                         {{ rule.label }}
                         <input class="form-check-input" :value="rule.rule" @change="parentChangeTypedform" v-model="selectRules" type="checkbox">
                     </label>
-                    <div v-if="rule.hasOwnProperty('maxLength')">
+                    <div v-if="rule.hasOwnProperty('length')">
                         <input
                         v-model="maxLength"
                         @input="parentChangeTypedform"
-                        :disabled="!selectRules.some(rule => rule==='maxLength')"
-                        :class="{ 'is-invalid': errMsgs.hasOwnProperty(`maxLength${itemIndex}`) }"
+                        :disabled="!selectRules.some(rule => rule==='length')"
+                        :class="{ 'is-invalid': errMsgs.hasOwnProperty(`length${itemIndex}`) }"
                         type="text"><span>文字</span>
-                        <span v-if="errMsgs.hasOwnProperty(`maxLength${itemIndex}`)" class="invalid-feedback">
-                            {{ errMsgs[`maxLength${itemIndex}`] }}
+                        <span v-if="errMsgs.hasOwnProperty(`length${itemIndex}`)" class="invalid-feedback">
+                            {{ errMsgs[`length${itemIndex}`] }}
                         </span>
                     </div>
-                    <div v-if="rule.hasOwnProperty('minValue')">
+                    <div v-if="rule.hasOwnProperty('numberMin')">
                         <span>最小値</span>
                         <input
                         v-model="minValue"
                         @input="parentChangeTypedform"
-                        :disabled="!selectRules.some(rule => rule==='minValue')"
-                        :class="{ 'is-invalid': errMsgs.hasOwnProperty(`minValue${itemIndex}`) }"
+                        :disabled="!selectRules.some(rule => rule==='numberMin')"
+                        :class="{ 'is-invalid': errMsgs.hasOwnProperty(`numberMin${itemIndex}`) }"
                         type="text">
-                        <span v-if="errMsgs.hasOwnProperty(`minValue${itemIndex}`)" class="invalid-feedback">
-                            {{ errMsgs[`minValue${itemIndex}`] }}
+                        <span v-if="errMsgs.hasOwnProperty(`numberMin${itemIndex}`)" class="invalid-feedback">
+                            {{ errMsgs[`numberMin${itemIndex}`] }}
                         </span>
                     </div>
-                    <div v-if="rule.hasOwnProperty('maxValue')">
+                    <div v-if="rule.hasOwnProperty('numberMax')">
                         <span>最大値</span>
                         <input
                         v-model="maxValue"
                         @input="parentChangeTypedform"
-                        :disabled="!selectRules.some(rule => rule==='maxValue')"
-                        :class="{ 'is-invalid': errMsgs.hasOwnProperty(`maxValue${itemIndex}`) }"
+                        :disabled="!selectRules.some(rule => rule==='numberMax')"
+                        :class="{ 'is-invalid': errMsgs.hasOwnProperty(`numberMax${itemIndex}`) }"
                         type="text">
-                        <span v-if="errMsgs.hasOwnProperty(`maxValue${itemIndex}`)" class="invalid-feedback">
-                            {{ errMsgs[`maxValue${itemIndex}`] }}
+                        <span v-if="errMsgs.hasOwnProperty(`numberMax${itemIndex}`)" class="invalid-feedback">
+                            {{ errMsgs[`numberMax${itemIndex}`] }}
                         </span>
                     </div>
                 </div>
@@ -96,6 +94,7 @@
                         </div>
                     </div>
                 </div>
+                {{ (this.propsItem.relatedIds) ? true: false }}
             </div>
         </div>
         <div v-if="typeValue==='text' || typeValue==='memo'" class="row">
@@ -106,11 +105,10 @@
                         自動返信メールの宛先にする
                         <input @change="parentChangeTypedform" v-model="to" class="form-check-input" type="checkbox">
                     </label>
-                    {{ to }}
                 </div>
             </div>
         </div>
-        <div v-if="typeValue==='radio'" class="row">
+        <div v-if="typeValue==='select'" class="row">
             <label class="col-4">選択肢</label>
             <div class="col-8 p-0">
                 <div v-for="choice, index in choices" :key="choice.id" class="mb-3 input-group">
@@ -123,7 +121,8 @@
                 </div>
             </div>
         </div>
-        {{ items }}
+        {{ propsItem }}
+        {{ choices }}
     </div>
 </template>
 
@@ -142,25 +141,21 @@ export default {
     data(){
         return {
             items: this.propsItems,
-            id: this.propsItem.id || null,
-            label: this.propsItem.label || null,
-            maxLength: this.propsItem.maxLength || null,
-            minValue: this.propsItem.minValue || null,
-            maxValue: this.propsItem.maxValue || null,
+            id: this.propsItem.id,
+            label: this.propsItem.label,
+            maxLength: this.propsItem.maxLength,
+            minValue: this.propsItem.minValue,
+            maxValue: this.propsItem.maxValue,
             types: [
                 { label: "テキスト", value: "text" },
                 { label: "メモ", value: "memo" },
-                { label: "ラジオボタン", value: "radio" },
+                { label: "ラジオボタン", value: "select" },
                 { label: "チェックボタン", value: "checkbox" },
             ],
             typeValue: this.propsItem.type || "text",
             selectRules: this.propsItem.rules || [],
-            relatedIds: [
-                { id: 1, relatedId: null }
-            ],
-            choices: [
-                { id: 1, choice: null }
-            ],
+            relatedIds: this.propsItem.relatedIds || [{ id: 1, relatedId: null }],
+            choices: this.propsItem.choices || [{ id: 1, choice: null }],
             to: this.propsItem.to || false
         }
     },
@@ -169,18 +164,18 @@ export default {
             if (this.typeValue==="text"){
                 return [
                     { rule: "required", label: "必須入力" },
-                    { rule: "maxLength", label: "最大文字数制限",  maxLength: true },
-                    { rule: "mailOnly", label: "メールアドレスのみ可" },
-                    { rule: "urlOnly", label: "URLのみ可" },
-                    { rule: "numericOnly", label: "数値のみ可" },
+                    { rule: "length", label: "最大文字数制限",  length: true },
+                    { rule: "email", label: "メールアドレスのみ可" },
+                    { rule: "url", label: "URLのみ可" },
+                    { rule: "digit", label: "数値のみ可" },
                     { rule: "integer", label: "整数のみ可" },
-                    { rule: "minValue", label: "数値の最小値を制限", minValue: true },
-                    { rule: "maxValue", label: "数値の最大値を制限", maxValue: true }
+                    { rule: "numberMin", label: "数値の最小値を制限", numberMin: true },
+                    { rule: "numberMax", label: "数値の最大値を制限", numberMax: true }
                 ]
             }else if(this.typeValue==="memo"){
                 return [
                     { rule: "required", label: "必須入力" },
-                    { rule: "maxLength", label: "最大文字数制限", maxLength: true },
+                    { rule: "length", label: "最大文字数制限", length: true },
                 ]
             }else{
                 return [{ rule: "requiredSelect", label: "必須選択" },]
@@ -192,6 +187,7 @@ export default {
         initialRules(){
             this.selectRules = []
             const typedForm = {
+                // id: null,
                 rules: [],
                 maxLength: null,
                 minValue: null,
@@ -206,6 +202,7 @@ export default {
         //項目ごとのフォーム内容を変更
         parentChangeTypedform(){
             const typedForm = {
+                // id: this.id,
                 rules: [...this.selectRules],
                 maxLength: this.maxLength,
                 minValue: this.minValue,
@@ -218,7 +215,7 @@ export default {
             this.changeTypedform(typedForm, this.itemIndex);
         },
         parentChangeLabel(){
-            this.changeLabel(this.itemIndex, this.label, this.itemId)
+            this.changeLabel(this.itemIndex, this.label, this.id)
         },
         //==========================
         //追加処理
@@ -229,6 +226,7 @@ export default {
                 id: newId,
                 choice: null
             })
+            this.parentChangeTypedform()
         },
         //項目ID
         addRelatedId(){
@@ -237,6 +235,7 @@ export default {
                 id: newId,
                 relatedId: null
             })
+            this.parentChangeTypedform()
         },
         //==========================
         //削除処理
@@ -253,7 +252,6 @@ export default {
         }
     },
     mounted(){
-        console.log("form-item")
     }
 }
 </script>

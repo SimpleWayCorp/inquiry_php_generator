@@ -78,11 +78,11 @@
 
         <div class="row mb-5">
           <label class="col-2">項目</label>
-          <div class="col-10 p-0">
+          <div v-if="isFileChange" class="col-10 p-0">
 
             <form-item
             v-for="item,index in items"
-            :key="item.itemId"
+            :key="index"
             :delete-item="deleteItem"
             :item-index="index"
             :props-items="items"
@@ -91,8 +91,7 @@
             :change-label="changeLabel"
             :change-typedform="changeTypedForm"
             ></form-item>
-            {{ items }}
-
+ 
             <div class="d-flex justify-content-center "><button @click="addItem" class="btn btn-primary">項目を追加</button></div>
           </div>
         </div>
@@ -130,17 +129,31 @@ export default {
           label: null,
           id: null,
           rules: [],
-          relatedIds: [],
+          relatedIds: [{ id: 1, relatedId: null }],
           maxLength: null,
           minValue: null,
           maxValue: null,
-          choices: [],
+          choices: [{ id: 1, choice: null }],
           to: false,
           type: "text"
         }
       ],
       errMsgs: {},
       typeValue: 1,
+      isFileChange: true
+    }
+  },
+  computed: {
+    defaultValue: function(){
+      return function(array, element){
+        if(array.length){
+          return array.map((el, index) => {
+            return { id: index+1, [element]: el }
+          })
+        }else{
+          return [{ id: 1, [element]: null }]
+        }
+      }
     }
   },
   methods: {
@@ -156,25 +169,34 @@ export default {
       const that = this
       reader.readAsText(file)
       reader.onload = (e) => {
-        console.log("load")
         const configFile = JSON.parse(e.target.result)
         that.formName = configFile.name
         that.subject = configFile.subject
         that.from = configFile.from
-        that.bcc = [...configFile.bcc].map((bcc, index) => {
+        that.bcc = configFile.bcc.map((bcc, index) => {
           return { id: index+1, address: bcc }
         })
         that.publicPath = configFile.publicPath
         that.privatePath = configFile.privatePath
         that.urlPath = configFile.urlPath
-        console.log(configFile.items)
-        that.items = [...configFile.items].map((item, index) => {
+        that.items = configFile.items.map((item, index) => {
           item.itemId = index + 1
+          item.relatedIds = this.defaultValue(item.relatedIds, "relatedId")
+          item.choices = this.defaultValue(item.choices, "choice")
+          // item.relatedIds = item.relatedIds.map((relatedId, index) => {
+          //   return { id: index + 1, relatedId: relatedId }
+          // })
+          // item.choices = item.choices.map((choice, index) => {
+          //   return { id: index + 1, choice: choice }
+          // })
           return item
         })
+        this.isFileChange = false
+        this.$nextTick(() => (this.isFileChange = true))
       }
     },
     changeTypedForm(typedForm, index){
+      // this.items[index].id = typedForm.id
       this.items[index].rules = typedForm.rules
       this.items[index].maxLength = typedForm.maxLength
       this.items[index].minValue = typedForm.minValue
@@ -276,7 +298,7 @@ export default {
       }
 
       //mail形式チェック
-      this.mailCheck(this.subject, "subject")
+      // this.mailCheck(this.subject, "subject")
       this.mailCheck(this.from, "from")
       for(let i=0; i<this.bcc.length; i++){
         this.mailCheck(this.bcc[i].address, `bcc${i}`)
@@ -289,16 +311,19 @@ export default {
 
       //項目入力チェック
       for(let i=0; i<this.items.length; i++){
-        if(this.items[i].rules.some(rule => rule==="maxLength")){
-          this.naturalNumberCheck(this.items[i].maxLength, `maxLength${i}`)
+        console.log(this.items[i].rules)
+      }
+      for(let i=0; i<this.items.length; i++){
+        if(this.items[i].rules.some(rule => rule==="length")){
+          this.naturalNumberCheck(this.items[i].maxLength, `length${i}`)
         }
 
-        if(this.items[i].rules.some(rule => rule==="minValue")){
-          this.integerCheck(this.items[i].minValue, `minValue${i}`)
+        if(this.items[i].rules.some(rule => rule==="numberMin")){
+          this.integerCheck(this.items[i].minValue, `numberMin${i}`)
         }
 
-        if(this.items[i].rules.some(rule => rule==="maxValue")){
-          this.integerCheck(this.items[i].maxValue, `maxValue${i}`)
+        if(this.items[i].rules.some(rule => rule==="numberMax")){
+          this.integerCheck(this.items[i].maxValue, `numberMax${i}`)
         }
       }
 

@@ -6,18 +6,95 @@
     "publicPath": "/var/www/html/",
     "privatePath": "/var/www/private/",
     "urlPath": "/path/to/inquiry/",
-    "items": [
-        {
-            "label": "件名",
-            "id": "subject",
-            "type": "select",
-            "rules": ["requiredSelect"],
-            "relatedIds": [],
-            "maxLength": "",
-            "minValue": "",
-            "maxValue": "",
-            "choices": [],
-            "to": false
-        }
-    ]
+    "items":  [
+{
+"label": "件名",
+"id": "subject",
+"type": "select",
+"rules": ["requiredSelect"],
+"relatedIds": [],
+"maxLength": "",
+"minValue": "",
+"maxValue": "",
+"choices": ["選択してください", "ご意見", "ご感想", "その他"],
+"to": false
+}, {
+"label": "お名前",
+"id": "name",
+"type": "text",
+"rules": ["required"],
+"relatedIds": [],
+"maxLength": "",
+"minValue": "",
+"maxValue": "",
+"choices": [],
+"to": false
+}, {
+"label": "メールアドレス",
+"id": "email",
+"type": "text",
+"rules": ["required", "email"],
+"relatedIds": [],
+"maxLength": "",
+"minValue": "",
+"maxValue": "",
+"choices": [],
+"to": true
+}, {
+"label": "電話番号(上桁)",
+"id": "telephone_h",
+"type": "text",
+"rules": ["required", "digit"],
+"relatedIds": ["telephone_h", "telephone_m", "telephone_l"],
+"maxLength": "",
+"minValue": "",
+"maxValue": "",
+"choices": [],
+"to": false
+}, {
+"label": "電話番号(中桁)",
+"id": "telephone_m",
+"type": "text",
+"rules": ["required", "digit"],
+"relatedIds": ["telephone_h", "telephone_m", "telephone_l"],
+"maxLength": "",
+"minValue": "",
+"maxValue": "",
+"choices": [],
+"to": false
+}, {
+"label": "電話番号(下桁)",
+"id": "telephone_l",
+"type": "text",
+"rules": ["required", "digit"],
+"relatedIds": ["telephone_h", "telephone_m", "telephone_l"],
+"maxLength": "",
+"minValue": "",
+"maxValue": "",
+"choices": [],
+"to": false
+}, {
+"label": "お問い合わせ内容",
+"id": "content",
+"type": "memo",
+"rules": ["required","length"],
+"relatedIds": [],
+"maxLength": "10000",
+"minValue": "",
+"maxValue": "",
+"choices": [],
+"to": false
+}, {
+"label": "個人情報の取扱に同意",
+"id": "agree",
+"type": "checkbox",
+"rules": ["required"],
+"relatedIds": [],
+"maxLength": "",
+"minValue": "",
+"maxValue": "",
+"choices": [],
+"to": false
+}
+]
 }
