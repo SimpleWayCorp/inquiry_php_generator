@@ -1,6 +1,6 @@
 <template>
     <div v-if="propsItem.itemId===itemIndex+1" class="p-3 mb-3 pt-5 border rounded position-relative">
-        <button v-if="propsItems.length!==1" @click="deleteItem(itemIndex)" class="btn btn-danger position-absolute top-0 end-0">削除</button>
+        <button v-if="propsItems.length!==1" @click="deleteI" class="btn btn-danger position-absolute top-0 end-0">削除</button>
         <div class="row mb-3">
             <label class="form-label">見出し</label>
             <input
@@ -121,8 +121,6 @@
                 </div>
             </div>
         </div>
-        {{ propsItem }}
-        {{ choices }}
     </div>
 </template>
 
@@ -183,6 +181,9 @@ export default {
         }
     },
     methods: {
+        deleteI(){
+            this.deleteItem(this.itemIndex)
+        },
         //入力チェック初期化
         initialRules(){
             this.selectRules = []

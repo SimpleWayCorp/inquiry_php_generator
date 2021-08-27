@@ -105,6 +105,10 @@
 
 <script>
 import FormItem from "./components/FormItem.vue"
+import JSZip from "jszip"
+import { saveAs } from "file-saver"
+import controllerBase from "../controller.base.js"
+import modelBase from "../model.base.js"
 
 export default {
   name: 'App',
@@ -154,6 +158,12 @@ export default {
           return [{ id: 1, [element]: null }]
         }
       }
+    },
+    pathName: function(){
+      return function(path){
+        const splitPath = path.split("/")
+        return splitPath.splice(1, splitPath.length-2)
+      }
     }
   },
   methods: {
@@ -183,12 +193,6 @@ export default {
           item.itemId = index + 1
           item.relatedIds = this.defaultValue(item.relatedIds, "relatedId")
           item.choices = this.defaultValue(item.choices, "choice")
-          // item.relatedIds = item.relatedIds.map((relatedId, index) => {
-          //   return { id: index + 1, relatedId: relatedId }
-          // })
-          // item.choices = item.choices.map((choice, index) => {
-          //   return { id: index + 1, choice: choice }
-          // })
           return item
         })
         this.isFileChange = false
@@ -270,6 +274,13 @@ export default {
         this.errMsgs[key] = "/から入力してください"
       }
     },
+    createFolder(zip, path){
+      if(path.length === 1){
+        return zip.folder(`${path[0]}`)
+      }else{
+        return this.createFolder(zip.folder(`${path[0]}`), path.splice(1))
+      }
+    },
     downLoad(){
       //初期化
       this.errMsgs = {}
@@ -311,9 +322,6 @@ export default {
 
       //項目入力チェック
       for(let i=0; i<this.items.length; i++){
-        console.log(this.items[i].rules)
-      }
-      for(let i=0; i<this.items.length; i++){
         if(this.items[i].rules.some(rule => rule==="length")){
           this.naturalNumberCheck(this.items[i].maxLength, `length${i}`)
         }
@@ -328,7 +336,38 @@ export default {
       }
 
       if(!Object.keys(this.errMsgs).length){
-        alert("download")
+        const zip = new JSZip()
+        console.log(this.items)
+
+        //=============publicフォルダー作成==============
+        const publicFolder = this.createFolder(zip, this.pathName(this.publicPath))
+        const publicUrlFolder = this.createFolder(publicFolder, this.pathName(this.urlPath))
+        publicUrlFolder.file("index.php", "hello")
+
+        //=============privateフォルダー作成==============
+        const privateFolder = this.createFolder(zip, this.pathName(this.privatePath))
+
+        //Buildフォルダー作成
+        const BuildFolder = privateFolder.folder("Build")
+        const privateUrlFolder = this.createFolder(BuildFolder, this.pathName(this.urlPath))
+        privateUrlFolder.file("build_config.json", '{ "message": "hello" }')
+
+        //Appフォルダー作成
+        const AppFolder = privateFolder.folder("App")
+        AppFolder.file("config.php", "config")
+        const controller = AppFolder.folder("Controller")
+        const model =  AppFolder.folder("Model")
+        const view =  AppFolder.folder("View")
+        const viewUrlFolder = this.createFolder(view, this.pathName(this.urlPath))
+        viewUrlFolder.file("index.php", "hello")
+
+        controller.file("Base.php", controllerBase)
+        model.file("Base.php", modelBase)
+
+        zip.generateAsync({type:"blob"}).then(function(content) {
+            // see FileSaver.js
+            saveAs(content, "example.zip");
+        });
       }
     }
   }
