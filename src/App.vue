@@ -90,6 +90,7 @@
             :err-msgs="errMsgs"
             :change-label="changeLabel"
             :change-typedform="changeTypedForm"
+            :update-is-file-change="updateIsFileChange"
             ></form-item>
  
             <div class="d-flex justify-content-center "><button @click="addItem" class="btn btn-primary">項目を追加</button></div>
@@ -105,10 +106,12 @@
 
 <script>
 import FormItem from "./components/FormItem.vue"
+import controllerBase from "../template/controller.base.js"
+import modelBase from "../template/model.base.js"
+import { csrf, mail, sanitize, template, validation } from "../template/helper.js"
+
 import JSZip from "jszip"
 import { saveAs } from "file-saver"
-import controllerBase from "../controller.base.js"
-import modelBase from "../model.base.js"
 
 export default {
   name: 'App',
@@ -159,14 +162,28 @@ export default {
         }
       }
     },
-    pathName: function(){
+    //スラッシュを除いた配列に変換
+    pathToArray: function(){
       return function(path){
-        const splitPath = path.split("/")
-        return splitPath.splice(1, splitPath.length-2)
+        return path.split("/").filter(level => level)
+      }
+    },
+    //アッパーキャメルに変換
+    toUpperCamel: function(){
+      return function(path){
+        return this.pathToArray(path).map(path => {
+          return path.toLowerCase().replace(/^[a-z]/, (upper) => {
+            return upper.toUpperCase()
+          })
+        }).join("")
       }
     }
   },
   methods: {
+    updateIsFileChange(){
+      this.isFileChange = false
+      this.$nextTick(() => (this.isFileChange = true))
+    },
     fileChange(e){
       const files = e.target.files
       if(!files.length){
@@ -195,8 +212,7 @@ export default {
           item.choices = this.defaultValue(item.choices, "choice")
           return item
         })
-        this.isFileChange = false
-        this.$nextTick(() => (this.isFileChange = true))
+        this.updateIsFileChange()
       }
     },
     changeTypedForm(typedForm, index){
@@ -274,6 +290,7 @@ export default {
         this.errMsgs[key] = "/から入力してください"
       }
     },
+    //フォルダー作成
     createFolder(zip, path){
       if(path.length === 1){
         return zip.folder(`${path[0]}`)
@@ -281,6 +298,7 @@ export default {
         return this.createFolder(zip.folder(`${path[0]}`), path.splice(1))
       }
     },
+    //ダウンロード動作
     downLoad(){
       //初期化
       this.errMsgs = {}
@@ -340,16 +358,16 @@ export default {
         console.log(this.items)
 
         //=============publicフォルダー作成==============
-        const publicFolder = this.createFolder(zip, this.pathName(this.publicPath))
-        const publicUrlFolder = this.createFolder(publicFolder, this.pathName(this.urlPath))
+        const publicFolder = this.createFolder(zip, this.pathToArray(this.publicPath))
+        const publicUrlFolder = this.createFolder(publicFolder, this.pathToArray(this.urlPath))
         publicUrlFolder.file("index.php", "hello")
 
         //=============privateフォルダー作成==============
-        const privateFolder = this.createFolder(zip, this.pathName(this.privatePath))
+        const privateFolder = this.createFolder(zip, this.pathToArray(this.privatePath))
 
         //Buildフォルダー作成
         const BuildFolder = privateFolder.folder("Build")
-        const privateUrlFolder = this.createFolder(BuildFolder, this.pathName(this.urlPath))
+        const privateUrlFolder = this.createFolder(BuildFolder, this.pathToArray(this.urlPath))
         privateUrlFolder.file("build_config.json", '{ "message": "hello" }')
 
         //Appフォルダー作成
@@ -357,11 +375,20 @@ export default {
         AppFolder.file("config.php", "config")
         const controller = AppFolder.folder("Controller")
         const model =  AppFolder.folder("Model")
+        const helper = AppFolder.folder("Helper")
         const view =  AppFolder.folder("View")
-        const viewUrlFolder = this.createFolder(view, this.pathName(this.urlPath))
+        const viewUrlFolder = this.createFolder(view, this.pathToArray(this.urlPath))
         viewUrlFolder.file("index.php", "hello")
+        const mail = viewUrlFolder.folder("mail")
+        mail.file("body.php", "body")
+        mail.file("subject.php", "subject")
 
+        //helper
+        this.createHelper(helper)
+
+        controller.file(`${this.toUpperCamel(this.urlPath)}`, "hello")
         controller.file("Base.php", controllerBase)
+        model.file(`${this.toUpperCamel(this.urlPath)}`, "hello")
         model.file("Base.php", modelBase)
 
         zip.generateAsync({type:"blob"}).then(function(content) {
@@ -369,7 +396,15 @@ export default {
             saveAs(content, "example.zip");
         });
       }
-    }
+    },
+    createHelper(helper){
+      helper.file("Csrf.php", csrf)
+      helper.file("Mail.php", mail)
+      helper.file("Sanitize.php", sanitize)
+      helper.file("Template.php", template)
+      helper.file("Validation.php", validation)
+    },
+    
   }
 }
 </script>
