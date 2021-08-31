@@ -105,13 +105,20 @@
 </template>
 
 <script>
+import { csrf, mail, sanitize, template, validation } from "../template/helper/helper.js"
+import controllerBase from "../template/controller/base.js"
+import controllerUrlPath from "../template/controller/urlPath.js"
+import modelBase from "../template/model/base.js"
+import modelUrlPath from "../template/model/urlPath.js"
 import FormItem from "./components/FormItem.vue"
-import controllerBase from "../template/controller.base.js"
-import modelBase from "../template/model.base.js"
-import { csrf, mail, sanitize, template, validation } from "../template/helper.js"
+import publicIndex from "../template/public/index.js"
+import config from "../template/app/config.js"
+import body from "../template/view/mail/body.js"
+import subject from "../template/view/mail/subject.js"
+import index from "../template/view/index.js"
 
-import JSZip from "jszip"
 import { saveAs } from "file-saver"
+import JSZip from "jszip"
 
 export default {
   name: 'App',
@@ -355,12 +362,12 @@ export default {
 
       if(!Object.keys(this.errMsgs).length){
         const zip = new JSZip()
-        console.log(this.items)
+        const upperCamelUrl = this.toUpperCamel(this.urlPath)
 
         //=============publicフォルダー作成==============
         const publicFolder = this.createFolder(zip, this.pathToArray(this.publicPath))
         const publicUrlFolder = this.createFolder(publicFolder, this.pathToArray(this.urlPath))
-        publicUrlFolder.file("index.php", "hello")
+        publicUrlFolder.file("index.php", publicIndex(upperCamelUrl))
 
         //=============privateフォルダー作成==============
         const privateFolder = this.createFolder(zip, this.pathToArray(this.privatePath))
@@ -372,24 +379,25 @@ export default {
 
         //Appフォルダー作成
         const AppFolder = privateFolder.folder("App")
-        AppFolder.file("config.php", "config")
         const controller = AppFolder.folder("Controller")
         const model =  AppFolder.folder("Model")
         const helper = AppFolder.folder("Helper")
         const view =  AppFolder.folder("View")
         const viewUrlFolder = this.createFolder(view, this.pathToArray(this.urlPath))
-        viewUrlFolder.file("index.php", "hello")
         const mail = viewUrlFolder.folder("mail")
-        mail.file("body.php", "body")
-        mail.file("subject.php", "subject")
 
-        //helper
-        this.createHelper(helper)
-
-        controller.file(`${this.toUpperCamel(this.urlPath)}`, "hello")
+        //ファイル作成
+        AppFolder.file("config.php", config(this.from, this.bcc))
+        viewUrlFolder.file("index.php", index(this.items))
+        mail.file("body.php", body)
+        mail.file("subject.php", subject)
+        controller.file(`${upperCamelUrl}.php`, controllerUrlPath(upperCamelUrl, this.urlPath))
         controller.file("Base.php", controllerBase)
-        model.file(`${this.toUpperCamel(this.urlPath)}`, "hello")
+        model.file(`${upperCamelUrl}.php`, modelUrlPath(upperCamelUrl))
         model.file("Base.php", modelBase)
+
+        //helper作成
+        this.createHelper(helper)
 
         zip.generateAsync({type:"blob"}).then(function(content) {
             // see FileSaver.js
@@ -404,7 +412,6 @@ export default {
       helper.file("Template.php", template)
       helper.file("Validation.php", validation)
     },
-    
   }
 }
 </script>
