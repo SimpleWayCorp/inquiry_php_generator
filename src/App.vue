@@ -393,7 +393,7 @@ export default {
         mail.file("subject.php", subject)
         controller.file(`${upperCamelUrl}.php`, controllerUrlPath(upperCamelUrl, this.urlPath))
         controller.file("Base.php", controllerBase)
-        model.file(`${upperCamelUrl}.php`, modelUrlPath(upperCamelUrl))
+        model.file(`${upperCamelUrl}.php`, modelUrlPath(upperCamelUrl, this.items))
         model.file("Base.php", modelBase)
 
         //helper作成

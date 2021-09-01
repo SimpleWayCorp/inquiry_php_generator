@@ -1,9 +1,66 @@
 const index = (items) => {
+	console.log(items)
 
+	//type=hiddenのinput
 	const hiddenInput = items.reduce((acc, curr) => {
 		acc += `<input type="hidden" name="action" value="<?php echo $${curr.id}; ?>">\n`
 		return acc
 	}, "")
+
+	//relatedIdsが空でないもの
+	const relatedIdsItems = items.filter(item => {
+		return item.relatedIds.length
+	})
+
+	//relatedIdsが空でない要素を配列で返す
+	const findIndexes = (items) => {
+		let indexes = []
+		items.map((item) => {
+			if(item.relatedIds[0]) indexes.push(item.id)
+		})
+		return indexes.splice(1)
+	}
+	console.log(findIndexes(items))
+
+	//itemsのrelatedIdsが空でないものを一つにまとめる
+	const formItems = items.filter(item => {
+		const pattern = new RegExp(findIndexes(items).join("|"))
+		return !pattern.test(item.id)
+	})
+	console.log(formItems)
+
+
+	const formGroup = formItems.reduce((acc, curr) => {
+		let typedInput = ""
+		if(curr.type==="select"){
+			typedInput += `<?php echo $contact->choice('${curr.id}', $${curr.id}); ?>`
+		}else if(curr.type==="memo"){
+			typedInput += `<?php echo nl2br($${curr.id}); ?>`
+		}else if(curr.type==="checkbox"){
+			typedInput += `<?php echo $${curr.id}; ?>`
+		}else if(curr.relatedIds.length!==0){
+			typedInput += relatedIdsItems.reduce((acc, curr, currIndex) => {
+				if(relatedIdsItems.length-1 === currIndex){
+					acc += `<?php echo $${curr.id}; ?>`
+				}else{
+					acc += `<?php echo $${curr.id}; ?> - `
+				}
+				return acc
+			}, "")
+		}else{
+			typedInput += `<?php echo $${curr.id}; ?>`
+		}
+
+		acc += `
+		<div class="form-group row">
+			<label class="col-sm-2 col-form-label">${curr.label}</label>
+			<div class="col-sm-10">
+				<div class="my-2">${typedInput}</div>
+			</div>
+		</div>\n`
+		return acc
+	}, "")
+	console.log(formGroup)
 
 	return `
 	<!doctype html>
@@ -38,44 +95,7 @@ const index = (items) => {
 	<?php } else if ($action == 'confirm') { ?>
 			<p>下記の内容をご確認の上、送信してください。</p>
 			<form action="./" method="post">
-				<div class="form-group row">
-					<label class="col-sm-2 col-form-label">件名</label>
-					<div class="col-sm-10">
-						<div class="my-2"><?php echo $contact->choice('subject', $subject); ?></div>
-					</div>
-				</div>
-				<div class="form-group row">
-					<label class="col-sm-2 col-form-label">名前</label>
-					<div class="col-sm-10">
-						<div class="my-2"><?php echo $name; ?></div>
-					</div>
-				</div>
-				<div class="form-group row">
-					<label class="col-sm-2 col-form-label">メールアドレス</label>
-					<div class="col-sm-10">
-						<div class="my-2"><?php echo $email; ?></div>
-					</div>
-				</div>
-				<div class="form-group row">
-					<label class="col-sm-2 col-form-label">電話番号</label>
-					<div class="col-sm-10">
-						<div class="my-2">
-							<?php echo $telephone_h; ?>
-							-
-							<?php echo $telephone_m; ?>
-							-
-							<?php echo $telephone_l; ?>
-						</div>
-					</div>
-				</div>
-				<div class="form-group row">
-					<label class="col-sm-2 col-form-label">お問い合わせ内容</label>
-					<div class="col-sm-10">
-						<div class="my-2">
-							<?php echo nl2br($content); ?>
-						</div>
-					</div>
-				</div>
+				${formGroup}
 				<input type="hidden" name="action" value="complete">
 				<input type="hidden" name="token" value="<?php echo $token; ?>">
 				${hiddenInput}

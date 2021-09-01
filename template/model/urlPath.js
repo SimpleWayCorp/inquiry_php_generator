@@ -1,4 +1,30 @@
-const urlPath = (upperCamelUrl) => {
+const urlPath = (upperCamelUrl, items) => {
+
+    const columns = items.reduce((acc, curr) => {
+
+        let dataType = "$this->COLUMN_TYPE_SMALLINT"
+        let defaultVal = "''"
+        let choices = ""
+
+        if(curr.type==="select"){
+            dataType = "$this->COLUMN_TYPE_SMALLINT"
+            defaultVal = "0"
+            choices = `'choices' => array(${curr.choices.map(choice => `'${choice}'`)}),`
+        }
+
+        acc += `
+        '${curr.id}' => array(
+            'data_type' => ${dataType},
+            'label' => '${curr.label}',
+            'caption' => '${curr.label}',
+            'default' => ${defaultVal},
+            'rule' => array(${curr.rules.map(rule => `'${rule}'`)}),
+            ${choices}
+        ),\n`
+
+        return acc
+    }, "")
+
     return `
     <?php
     
@@ -9,61 +35,7 @@ const urlPath = (upperCamelUrl) => {
         function __construct()
         {
             $this->columns = array(
-                'subject' => array(
-                    'data_type' => $this->COLUMN_TYPE_SMALLINT,
-                    'label' => '件名',
-                    'caption' => '件名',
-                    'default' => 0,
-                    'rule' => array('requiredSelect'),
-                    'choices' => array(
-                        '選択してください',
-                        'ご意見',
-                        'ご感想',
-                        'その他',
-                    ),
-                ),
-                'name' => array(
-                    'data_type' => $this->COLUMN_TYPE_CHAR,
-                    'label' => 'お名前',
-                    'caption' => 'お名前',
-                    'default' => '',
-                    'rule' => array('required'),
-                ),
-                'email' => array(
-                    'data_type' => $this->COLUMN_TYPE_CHAR,
-                    'label' => 'メールアドレス',
-                    'caption' => 'メールアドレス',
-                    'default' => '',
-                    'rule' => array('required', 'email'),
-                ),
-                'telephone_h' => array(
-                    'data_type' => $this->COLUMN_TYPE_CHAR,
-                    'label' => '電話番号(上桁)',
-                    'caption' => '電話番号',
-                    'default' => '',
-                    'rule' => array('digit', 'requiredWith|telephone_h|telephone_m|telephone_l'),
-                ),
-                'telephone_m' => array(
-                    'data_type' => $this->COLUMN_TYPE_CHAR,
-                    'label' => '電話番号(中桁)',
-                    'caption' => '電話番号',
-                    'default' => '',
-                    'rule' => array('digit', 'requiredWith|telephone_h|telephone_m|telephone_l'),
-                ),
-                'telephone_l' => array(
-                    'data_type' => $this->COLUMN_TYPE_CHAR,
-                    'label' => '電話番号(下桁)',
-                    'caption' => '電話番号',
-                    'default' => '',
-                    'rule' => array('digit', 'requiredWith|telephone_h|telephone_m|telephone_l'),
-                ),
-                'content' => array(
-                    'data_type' => $this->COLUMN_TYPE_CLOB,
-                    'label' => 'お問い合わせ内容',
-                    'caption' => 'お問い合わせ内容',
-                    'default' => '',
-                    'rule' => array('required'),
-                ),
+                ${columns}
             );
         }
     
