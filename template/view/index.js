@@ -1,45 +1,15 @@
-const index = (items) => {
-	console.log(items)
-
-	//type=hiddenのinput
-	const hiddenInput = items.reduce((acc, curr) => {
-		acc += `<input type="hidden" name="action" value="<?php echo $${curr.id}; ?>">\n`
-		return acc
-	}, "")
-
-	//relatedIdsが空でないもの
-	const relatedIdsItems = items.filter(item => {
-		return item.relatedIds.length
-	})
-
-	//relatedIdsが空でない要素を配列で返す
-	const findIndexes = (items) => {
-		let indexes = []
-		items.map((item) => {
-			if(item.relatedIds[0]) indexes.push(item.id)
-		})
-		return indexes.splice(1)
-	}
-	console.log(findIndexes(items))
-
-	//itemsのrelatedIdsが空でないものを一つにまとめる
-	const formItems = items.filter(item => {
-		const pattern = new RegExp(findIndexes(items).join("|"))
-		return !pattern.test(item.id)
-	})
-	console.log(formItems)
-
-
-	const formGroup = formItems.reduce((acc, curr) => {
+//確認画面部分のhtml作成
+const createConfirmForm = (items, relatedIdsItems) => {
+	return items.reduce((acc, curr) => {
 		let typedInput = ""
 		if(curr.type==="select"){
-			typedInput += `<?php echo $contact->choice('${curr.id}', $${curr.id}); ?>`
+			typedInput = `<?php echo $contact->choice('${curr.id}', $${curr.id}); ?>`
 		}else if(curr.type==="memo"){
-			typedInput += `<?php echo nl2br($${curr.id}); ?>`
+			typedInput = `<?php echo nl2br($${curr.id}); ?>`
 		}else if(curr.type==="checkbox"){
-			typedInput += `<?php echo $${curr.id}; ?>`
-		}else if(curr.relatedIds.length!==0){
-			typedInput += relatedIdsItems.reduce((acc, curr, currIndex) => {
+			typedInput = `<?php echo $${curr.id}; ?>`
+		}else if(curr.relatedIds[0].relatedId){
+			typedInput = relatedIdsItems.reduce((acc, curr, currIndex) => {
 				if(relatedIdsItems.length-1 === currIndex){
 					acc += `<?php echo $${curr.id}; ?>`
 				}else{
@@ -48,7 +18,7 @@ const index = (items) => {
 				return acc
 			}, "")
 		}else{
-			typedInput += `<?php echo $${curr.id}; ?>`
+			typedInput = `<?php echo $${curr.id}; ?>`
 		}
 
 		acc += `
@@ -60,7 +30,72 @@ const index = (items) => {
 		</div>\n`
 		return acc
 	}, "")
-	console.log(formGroup)
+}
+
+//入力画面部分のhtml作成
+const createEnteredForm = (items) => {
+	return items.reduce((acc, curr) => {
+		let typedInput = ""
+		let textMuted = ""
+		let requiredVal = (curr.rules[0]) ? curr.rules.find(rule => rule==="required" || rule==="requiredSelect") : "" || ""
+		if(requiredVal) textMuted='<small class="text-muted">(必須)</small>'
+
+		if(curr.type==="select"){
+			typedInput = `
+			<select id="${curr.id}" name="${curr.id}" class="form-control">
+				<?php foreach ($choices['${curr.id}'] as $key => $value) { ?>
+					<option value="<?php echo $key; ?>"<?php if ($key == $${curr.id}) { ?>selected<?php } ?>><?php echo $value; ?></option>
+				<?php } ?>
+			</select>
+			`
+		}else if(curr.type==="memo"){
+			typedInput = `<textarea id="${curr.id}" name="${curr.id}" class="form-control" rows="5" ${requiredVal}><?php echo $${curr.id}; ?></textarea>`
+		}else if(curr.type==="checkbox"){
+			typedInput = `<input type="checkbox" id="${curr.id}" name="${curr.id}" ${(curr.to) ? "checked" : ""}>`
+		}else{
+			typedInput = `<input type="text" id="${curr.id}" name="${curr.id}" value="<?php echo $${curr.id}; ?>" class="form-control" placeholder="" ${requiredVal}>`
+		}
+
+		acc += `
+		<div class="form-group row">
+			<label for="name" class="col-sm-3 col-form-label">
+				${curr.label}
+				${textMuted}
+			</label>
+			<div class="col-sm-9">
+				${typedInput}
+			</div>
+		</div>\n`
+		return acc
+	}, "")
+}
+
+//relatedIdsが空でない要素を配列で返す
+const findIndexes = (items) => {
+	let indexes = []
+	items.map((item) => {
+		if(item.relatedIds[0].relatedId) indexes.push(item.id)
+	})
+	return indexes.splice(1)
+}
+
+const index = (items) => {
+
+	//relatedIdsが空でないもの
+	const relatedIdsItems = items.filter(item => item.relatedIds[0].relatedId)
+
+	//itemsのrelatedIdsが空でないものを一つにまとめる
+	const formItems = items.filter(item => {
+		const pattern = new RegExp(findIndexes(items).join("|"))
+		return !pattern.test(item.id)
+	})
+
+	const hiddenInput = items.reduce((acc, curr) => {
+		acc += `<input type="hidden" name="action" value="<?php echo $${curr.id}; ?>">\n`
+		return acc
+	}, "")
+	const confirmForm = createConfirmForm(formItems, relatedIdsItems)
+	const enteredForm = createEnteredForm(formItems)
 
 	return `
 	<!doctype html>
@@ -95,7 +130,7 @@ const index = (items) => {
 	<?php } else if ($action == 'confirm') { ?>
 			<p>下記の内容をご確認の上、送信してください。</p>
 			<form action="./" method="post">
-				${formGroup}
+				${confirmForm}
 				<input type="hidden" name="action" value="complete">
 				<input type="hidden" name="token" value="<?php echo $token; ?>">
 				${hiddenInput}
@@ -105,75 +140,7 @@ const index = (items) => {
 			<p>必要事項をご記入のうえ、「確認画面」ボタンをクリックしてください。</p>
 			<form action="./" method="post">
 				<input type="hidden" name="action" id="action" value="confirm">
-				<div class="form-group row">
-					<label for="subject" class="col-sm-3 col-form-label">
-						件名
-						<small class="text-muted">
-							(必須)
-						</small>
-					</label>
-					<div class="col-sm-9">
-						<select id="subject" name="subject" class="form-control">
-	<?php 	foreach ($choices['subject'] as $key => $value) { ?>
-							<option value="<?php echo $key; ?>"<?php if ($key == $subject) { ?>selected<?php } ?>><?php echo $value; ?></option>
-	<?php 	} ?>
-						</select>
-					</div>
-				</div>
-				<div class="form-group row">
-					<label for="name" class="col-sm-3 col-form-label">
-						名前
-						<small class="text-muted">
-							(必須)
-						</small>
-					</label>
-					<div class="col-sm-9">
-						<input type="text" id="name" name="name" value="<?php echo $name; ?>" class="form-control" placeholder="山田 太郎" required>
-					</div>
-				</div>
-				<div class="form-group row">
-					<label for="email" class="col-sm-3 col-form-label">
-						メールアドレス
-						<small class="text-muted">
-							(必須)
-						</small>
-					</label>
-					<div class="col-sm-9">
-						<input type="text" id="email" name="email" value="<?php echo $email; ?>" class="form-control" placeholder="info@example.com" required>
-					</div>
-				</div>
-				<div class="form-group row">
-					<label for="telephone_h" class="col-sm-3 col-form-label">
-						電話番号
-						<small class="text-muted">
-							(必須)
-						</small>
-					</label>
-					<div class="col-sm-9">
-						<div class="input-group">
-							<input type="text" id="telephone_h" name="telephone_h" value="<?php echo $telephone_h; ?>" class="form-control" placeholder="090" required>
-							<div class="input-group-prepend input-group-apend">
-								<div class="input-group-text">-</div>
-							</div>
-							<input type="text" id="telephone_m" name="telephone_m" value="<?php echo $telephone_m; ?>" class="form-control" placeholder="0012" required>
-							<div class="input-group-prepend input-group-apend">
-								<div class="input-group-text">-</div>
-							</div>
-							<input type="text" id="telephone_l" name="telephone_l" value="<?php echo $telephone_l; ?>" class="form-control" placeholder="3456" required>
-						</div>
-					</div>
-				</div>
-				<div class="form-group row">
-					<label for="content" class="col-sm-3 col-form-label">
-						お問い合わせ内容
-						<small class="text-muted">
-							(必須)
-						</small>
-					</label>
-					<div class="col-sm-9">
-						<textarea id="content" name="content" class="form-control" rows="5" required><?php echo $content; ?></textarea>
-					</div>
-				</div>
+				${enteredForm}
 				<p class="text-center"><input type="submit" value="確認画面" class="btn btn-primary"></p>
 			</form>
 	<?php } ?>

@@ -94,7 +94,7 @@
 "minValue": "",
 "maxValue": "",
 "choices": [],
-"to": false
+"to": true
 }
 ]
 }

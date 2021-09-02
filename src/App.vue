@@ -334,7 +334,6 @@ export default {
       }
 
       //mail形式チェック
-      // this.mailCheck(this.subject, "subject")
       this.mailCheck(this.from, "from")
       for(let i=0; i<this.bcc.length; i++){
         this.mailCheck(this.bcc[i].address, `bcc${i}`)
@@ -367,7 +366,7 @@ export default {
         //=============publicフォルダー作成==============
         const publicFolder = this.createFolder(zip, this.pathToArray(this.publicPath))
         const publicUrlFolder = this.createFolder(publicFolder, this.pathToArray(this.urlPath))
-        publicUrlFolder.file("index.php", publicIndex(upperCamelUrl))
+        publicUrlFolder.file("index.php", publicIndex(upperCamelUrl, this.pathToArray(this.urlPath), this.privatePath))
 
         //=============privateフォルダー作成==============
         const privateFolder = this.createFolder(zip, this.pathToArray(this.privatePath))
