@@ -13,8 +13,27 @@
         <div class="row mb-3">
           <label class="col-5">フォーム名</label>
           <div class="col-7 p-0">
-              <input v-model="formName" :class="{ 'is-invalid': errMsgs.hasOwnProperty('formName') }" class="form-control" type="text">
-              <span v-if="errMsgs.hasOwnProperty('formName')" class="invalid-feedback">{{ errMsgs.formName }}</span>
+              <input
+                v-model="formName"
+                :class="{ 'is-invalid':
+                  error.validation &&
+                  error.validation.name
+                  }"
+                class="form-control"
+                type="text">
+              <span v-show="error.validation &&
+                  error.validation.name &&
+                  error.validation.name.require" class="invalid-feedback"
+              >
+              入力してください
+              </span>
+              <span v-show="error.validation &&
+                  error.validation.name &&
+                  error.validation.name.halfAlphaNumeric" class="invalid-feedback"
+              >
+              半角英数字で入力してください
+              </span>
+              {{ error }}
               <div class="form-text">※ 半角英数字・ハイフン・アンダースコアのみ</div>
           </div>
         </div>
@@ -22,16 +41,58 @@
         <div class="row mb-3">
           <label class="col-5">自動返信メール件名</label>
           <div class="col-7 p-0">
-              <input v-model="subject" :class="{ 'is-invalid': errMsgs.hasOwnProperty('subject') }" class="form-control" type="text">
-              <span v-if="errMsgs.hasOwnProperty('subject')" class="invalid-feedback">{{ errMsgs.subject }}</span>
+              <input
+                v-model="subject"
+                :class="{
+                  'is-invalid':
+                    error.validation &&
+                    error.validation.subject
+                  }" class="form-control" type="text"
+              >
+              <span
+                v-show="
+                  error.validation &&
+                  error.validation.subject &&
+                  error.validation.subject.require
+                "
+                class="invalid-feedback"
+              >
+              入力してください
+              </span>
           </div>
         </div>
 
         <div class="row mb-3">
           <label class="col-5">自動返信メールFROM</label>
           <div class="col-7 p-0">
-              <input v-model="from" :class="{ 'is-invalid': errMsgs.hasOwnProperty('from') }" class="form-control" type="text">
-              <span v-if="errMsgs.hasOwnProperty('from')" class="invalid-feedback">{{ errMsgs.from }}</span>
+              <input
+                v-model="from"
+                :class="{
+                  'is-invalid':
+                    error.validation &&
+                    error.validation.from
+                  }" class="form-control" type="text"
+              >
+              <span
+                v-show="
+                  error.validation &&
+                  error.validation.from &&
+                  error.validation.from.require
+                "
+                class="invalid-feedback"
+              >
+              入力してください
+              </span>
+              <span
+                v-show="
+                  error.validation &&
+                  error.validation.from &&
+                  error.validation.from.mail
+                "
+                class="invalid-feedback"
+              >
+              mail形式で入力してください
+              </span>
           </div>
         </div>
 
@@ -39,9 +100,36 @@
           <label class="col-5">自動返信メールBCC</label>
           <div class="col-7 p-0">
             <div v-for="bccObj,index in bcc" :key="bccObj.id" class="mb-3 input-group">
-              <input v-model="bccObj.address" :class="{ 'is-invalid': errMsgs.hasOwnProperty(`bcc${index}`) }" class="form-control" type="text">
+              <input
+                v-model="bccObj.address"
+                :class="{
+                  'is-invalid':
+                    error.validation &&
+                    error.validation.bcc
+                }"
+                class="form-control"
+                type="text">
               <span @click="deleteBcc(index)" v-if="bcc.length!==1" class="btn btn-danger input-group-text">削除</span>
-              <span v-if="errMsgs.hasOwnProperty(`bcc${index}`)" class="invalid-feedback">{{ errMsgs[`bcc${index}`] }}</span>
+              <span
+                v-show="
+                  error.validation &&
+                  error.validation.bcc &&
+                  error.validation.bcc[`require${index}`]
+                "
+                class="invalid-feedback"
+              >
+              入力してください
+              </span>
+              <span
+                v-show="
+                  error.validation &&
+                  error.validation.bcc &&
+                  error.validation.bcc[`mail${index}`]
+                "
+                class="invalid-feedback"
+              >
+              mail形式で入力してください
+              </span>
             </div>
             <div class="d-flex justify-content-end">
               <button @click="addBcc" class="btn btn-primary">追加</button>
@@ -52,8 +140,34 @@
         <div class="row mb-3">
           <label class="col-5">ドキュメントルートディレクトリパス</label>
           <div class="col-7 p-0">
-              <input v-model="publicPath" :class="{ 'is-invalid': errMsgs.hasOwnProperty('publicPath') }" class="form-control" type="text">
-              <span v-if="errMsgs.hasOwnProperty('publicPath')" class="invalid-feedback">{{ errMsgs.publicPath }}</span>
+              <input
+                v-model="publicPath"
+                :class="{
+                  'is-invalid':
+                    error.validation &&
+                    error.validation.publicPath
+                  }" class="form-control" type="text"
+              >
+              <span
+                v-show="
+                  error.validation &&
+                  error.validation.publicPath &&
+                  error.validation.publicPath.require
+                "
+                class="invalid-feedback"
+              >
+              入力してください
+              </span>
+              <span
+                v-show="
+                  error.validation &&
+                  error.validation.publicPath &&
+                  error.validation.publicPath.directory
+                "
+                class="invalid-feedback"
+              >
+              /から入力してください
+              </span>
               <div class="form-text">※ 絶対パス</div>
           </div>
         </div>
@@ -61,8 +175,34 @@
         <div class="row mb-3">
           <label class="col-5">ライブラリディレクトリパス</label>
           <div class="col-7 p-0">
-              <input v-model="privatePath" :class="{ 'is-invalid': errMsgs.hasOwnProperty('privatePath') }" class="form-control" type="text">
-              <span v-if="errMsgs.hasOwnProperty('privatePath')" class="invalid-feedback">{{ errMsgs.privatePath }}</span>
+              <input
+                v-model="privatePath"
+                :class="{
+                  'is-invalid':
+                    error.validation &&
+                    error.validation.privatePath
+                  }" class="form-control" type="text"
+              >
+              <span
+                v-show="
+                  error.validation &&
+                  error.validation.privatePath &&
+                  error.validation.privatePath.require
+                "
+                class="invalid-feedback"
+              >
+              入力してください
+              </span>
+              <span
+                v-show="
+                  error.validation &&
+                  error.validation.privatePath &&
+                  error.validation.privatePath.directory
+                "
+                class="invalid-feedback"
+              >
+              /から入力してください
+              </span>
               <div class="form-text">※ 絶対パス</div>
           </div>
         </div>
@@ -70,8 +210,34 @@
         <div class="row mb-3">
           <label class="col-5">設置先</label>
           <div class="col-7 p-0">
-              <input v-model="urlPath" :class="{ 'is-invalid': errMsgs.hasOwnProperty('urlPath') }" class="form-control" type="text">
-              <span v-if="errMsgs.hasOwnProperty('urlPath')" class="invalid-feedback">{{ errMsgs.urlPath }}</span>
+              <input
+                v-model="urlPath"
+                :class="{
+                  'is-invalid':
+                    error.validation &&
+                    error.validation.urlPath
+                  }" class="form-control" type="text"
+              >
+              <span
+                v-show="
+                  error.validation &&
+                  error.validation.urlPath &&
+                  error.validation.urlPath.require
+                "
+                class="invalid-feedback"
+              >
+              入力してください
+              </span>
+              <span
+                v-show="
+                  error.validation &&
+                  error.validation.urlPath &&
+                  error.validation.urlPath.directory
+                "
+                class="invalid-feedback"
+              >
+              /から入力してください
+              </span>
               <div class="form-text">※ URLの絶対パス</div>
           </div>
         </div>
@@ -88,7 +254,8 @@
             :props-items="items"
             :props-item="item"
             :err-msgs="errMsgs"
-            :change-label="changeLabel"
+            :error="error"
+            :change-label="changeLabelAndId"
             :change-typedform="changeTypedForm"
             :update-is-file-change="updateIsFileChange"
             ></form-item>
@@ -154,18 +321,20 @@ export default {
       ],
       errMsgs: {},
       typeValue: 1,
-      isFileChange: true
+      isFileChange: true,
+      error: {},
     }
   },
   computed: {
-    defaultValue: function(){
-      return function(array, element){
+    //配列の要素をオブジェクトに変換
+    changeElementToObject: function(){
+      return function(array, value){
         if(array.length){
           return array.map((el, index) => {
-            return { id: index+1, [element]: el }
+            return { id: index+1, [value]: el }
           })
         }else{
-          return [{ id: 1, [element]: null }]
+          return [{ id: 1, [value]: null }]
         }
       }
     },
@@ -215,8 +384,8 @@ export default {
         that.urlPath = configFile.urlPath
         that.items = configFile.items.map((item, index) => {
           item.itemId = index + 1
-          item.relatedIds = this.defaultValue(item.relatedIds, "relatedId")
-          item.choices = this.defaultValue(item.choices, "choice")
+          item.relatedIds = this.changeElementToObject(item.relatedIds, "relatedId")
+          item.choices = this.changeElementToObject(item.choices, "choice")
           return item
         })
         this.updateIsFileChange()
@@ -233,9 +402,11 @@ export default {
       this.items[index].to = typedForm.to
       this.items[index].type = typedForm.typeValue
     },
-    changeLabel(index, label, id){
-      this.items[index].label = label
-      this.items[index].id = id
+    changeLabelAndId(index, label, id){
+      this.$set(this.items[index], "label", label)
+      this.$set(this.items[index], "id", id)
+      // this.items[index].label = label
+      // this.items[index].id = id
     },
     addBcc(){
       const newId = this.bcc.slice(-1)[0].id+1
@@ -260,41 +431,41 @@ export default {
     },
     //未入力チェック
     unenteredCheck(checkForm, key){
-      if(!checkForm) this.errMsgs[key] = "入力必須です"
+      if(!checkForm) this.$set(this.errMsgs, key, "入力必須です")
     },
     //整数チェック
     integerCheck(checkForm, key){
       const pattern = new RegExp("^[0-9]+$")
       if(!pattern.test(checkForm) && checkForm){
-        this.errMsgs[key] = "整数で入力してください"
+        this.$set(this.errMsgs, key, "整数で入力してください")
       }
     },
     //自然数チェック
     naturalNumberCheck(checkForm, key){
       const pattern = new RegExp("^[1-9][0-9]*$")
       if(!pattern.test(checkForm) && checkForm){
-        this.errMsgs[key] = "自然数で入力してください"
+        this.$set(this.errMsgs, key, "自然数で入力してください")
       }
     },
     //半角英数字チェック（ハイフン、アンダースコアあり）
     halfAlphanumericCheck(checkForm, key){
       const pattern = new RegExp("^[\\w\\-]+$", "g")
       if(!pattern.test(checkForm) && checkForm){
-        this.errMsgs[key] = "半角英数字で入力してください"
+        this.$set(this.errMsgs, key, "半角英数字で入力してください")
       }
     },
     //メール形式チェック
     mailCheck(checkForm, key){
       const pattern = new RegExp("^[a-zA-Z0-9_.+-]+@([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\\.)+[a-zA-Z]{2,}$", "g")
       if(!pattern.test(checkForm) && checkForm){
-        this.errMsgs[key] = "mail形式で入力してください"
+        this.$set(this.errMsgs, key, "メール形式で入力してください")
       }
     },
     //ディレクトリチェック（/から始まるか）
     directoryCheck(checkForm, key){
       const pattern = new RegExp("^\\/", "g")
       if(!pattern.test(checkForm) && checkForm){
-        this.errMsgs[key] = "/から入力してください"
+        this.$set(this.errMsgs, key, "/から入力してください")
       }
     },
     //フォルダー作成
@@ -305,22 +476,178 @@ export default {
         return this.createFolder(zip.folder(`${path[0]}`), path.splice(1))
       }
     },
+    // フォーム名バリデーション
+    validateName(){
+      let e = {}
+      const pattern = new RegExp("^[\\w\\-]+$", "g")
+      //バリデーション動作
+      if (!this.formName) e.require = true
+      if (
+        !pattern.test(this.formName) &&
+        this.formName
+      ) e.halfAlphaNumeric = true
+
+      this.validationTemplate("name", e)
+    },
+    //メール件名バリデーション
+    validateSubject(){
+      let e = {}
+      //バリデーション動作
+      if (!this.subject) e.require = true
+
+      this.validationTemplate("subject", e)
+    },
+    //メールfromバリデーション
+    validateFrom(){
+      let e = {}
+      const pattern = new RegExp("^[a-zA-Z0-9_.+-]+@([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\\.)+[a-zA-Z]{2,}$", "g")
+      if (!this.from) e.require = true
+      if (
+        !pattern.test(this.from) &&
+        this.from
+      ) e.mail = true
+
+      this.validationTemplate("from", e)
+    },
+    //publicPathバリデーション
+    validatePublicPath(){
+      let e = {}
+      const pattern = new RegExp("^\\/", "g")
+      //バリデーション動作
+      if (!this.publicPath) e.require = true
+      if (
+        !pattern.test(this.publicPath) &&
+        this.publicPath
+      ) e.directory = true
+
+      this.validationTemplate("publicPath", e)
+    },
+    //privatePathバリデーション
+    validatePrivatePath(){
+      let e = {}
+      const pattern = new RegExp("^\\/", "g")
+      //バリデーション動作
+      if (!this.privatePath) e.require = true
+      if (
+        !pattern.test(this.privatePath) &&
+        this.privatePath
+      ) e.directory = true
+
+      this.validationTemplate("privatePath", e)
+    },
+    //urlPathバリデーション
+    validateUrlPath(){
+      let e = {}
+      const pattern = new RegExp("^\\/", "g")
+      //バリデーション動作
+      if (!this.urlPath) e.require = true
+      if (
+        !pattern.test(this.urlPath) &&
+        this.urlPath
+      ) e.directory = true
+
+      this.validationTemplate("urlPath", e)
+    },
+    //bccバリデーション
+    validateBcc(){
+      let e = {}
+      const pattern = new RegExp("^[a-zA-Z0-9_.+-]+@([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\\.)+[a-zA-Z]{2,}$", "g")
+      for (let i = 0; i < this.bcc.length; i++){
+        if (!this.bcc[i].address) e[`require${i}`] = true
+        if (
+          !pattern.test(this.bcc[i].address) &&
+          this.bcc[i].address
+        ) e[`mail${i}`] = true
+      }
+
+      this.validationTemplate("bcc", e)
+    },
+    //itemの見出しバリデーション
+    validateItemLabel(e, index){
+      if (!this.items[index].label) e.require = true
+      this.validationItemTemplate("label", e, index)
+    },
+    //itemの項目IDバリデーション
+    validateItemId(e, index){
+      const pattern = new RegExp("^[\\w\\-]+$", "g")
+      if (!this.items[index].id) e.require = true
+      if (
+        !pattern.test(this.items[index].id) &&
+        this.items[index].id
+      ) e.halfAlphaNumeric = true
+      this.validationItemTemplate("id", e, index)
+    },
+    //itemsバリデーション
+    validateItems(){
+      let e = {}
+      for (let i = 0; i < this.items.length; i++){
+        this.validateItemLabel(e, i)
+        this.validateItemId(e, i)
+      }
+    },
+    validationItemTemplate(inputName, e, index){
+      if(Object.keys(e).length){
+        if (!this.error[`item${index}`]) {
+          this.$set(this.error, `item${index}`, {})
+        }
+        if (!this.error[`item${index}`].validation){
+          this.$set(this.error[`item${index}`], "validation", {})
+        }
+        this.$set(this.error[`item${index}`].validation, inputName, e)
+      } else if (this.error[`item${index}`].validation && this.error[`item${index}`].validation[inputName]) {
+          delete this.error[`item${index}`].validation[inputName]
+      }
+      if (this.error[`item${index}`].validation &&
+        Object.keys(this.error[`item${index}`].validation).length === 0)
+      {
+        delete this.error[`item${index}`].validation
+      }
+    },
+    validationTemplate(inputName, e){
+      if (Object.keys(e).length){
+        if (!this.error.validation){
+          this.$set(this.error, "validation", {})
+        }
+        this.$set(this.error.validation, inputName, e)
+      } else if (this.error.validation && this.error.validation[inputName]){
+        delete this.error.validation[inputName]
+      }
+
+      if (this.error.validation &&
+          Object.keys(this.error.validation).length === 0)
+      {
+        delete this.error.validation
+      }
+    },
+    validation(){
+      this.validateName()
+      this.validateSubject()
+      this.validateFrom()
+      this.validateBcc()
+      this.validatePublicPath()
+      this.validatePrivatePath()
+      this.validateUrlPath()
+      this.validateItems()
+    },
     //ダウンロード動作
     downLoad(){
-      //初期化
+      //エラー初期化
       this.errMsgs = {}
 
-      //未入力チェック
-      this.unenteredCheck(this.formName, "formName")
-      this.unenteredCheck(this.subject, "subject")
-      this.unenteredCheck(this.from, "from")
-      this.unenteredCheck(this.publicPath, "publicPath")
-      this.unenteredCheck(this.privatePath, "privatePath")
-      this.unenteredCheck(this.urlPath, "urlPath")
+      //formName validation
+      this.validation()
 
-      for(let i=0; i<this.bcc.length; i++){
-        this.unenteredCheck(this.bcc[i].address, `bcc${i}`)
-      }
+      //未入力チェック
+      // this.unenteredCheck(this.formName, "formName")
+      // this.unenteredCheck(this.subject, "subject")
+      // this.unenteredCheck(this.from, "from")
+      // this.unenteredCheck(this.publicPath, "publicPath")
+      // this.unenteredCheck(this.privatePath, "privatePath")
+      // this.unenteredCheck(this.urlPath, "urlPath")
+
+      // for(let i=0; i<this.bcc.length; i++){
+      //   this.unenteredCheck(this.bcc[i].address, `bcc${i}`)
+      // }
 
       for(let i=0; i<this.items.length; i++){
         this.unenteredCheck(this.items[i].label, `label${i}`)

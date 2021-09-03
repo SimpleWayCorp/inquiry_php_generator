@@ -6,14 +6,24 @@
             <input
             v-model="label"
             @input="parentChangeLabel"
-            :class="{ 'is-invalid': errMsgs.hasOwnProperty(`label${itemIndex}`) }"
+            :class="{
+                'is-invalid':
+                    error[`item${itemIndex}`] &&
+                    error[`item${itemIndex}`].validation &&
+                    error[`item${itemIndex}`].validation.label
+            }"
             class="w-100 form-control" type="text"
             >
             <span
-            v-if="errMsgs.hasOwnProperty(`label${itemIndex}`)"
-            class="invalid-feedback"
+                v-show="
+                    error[`item${itemIndex}`] &&
+                    error[`item${itemIndex}`].validation &&
+                    error[`item${itemIndex}`].validation.label &&
+                    error[`item${itemIndex}`].validation.label.require
+                "
+                class="invalid-feedback"
             >
-                {{ errMsgs[`label${itemIndex}`] }}
+                入力してください
             </span>
         </div>
         <div class="row mb-4">
@@ -132,6 +142,7 @@ export default {
         propsItems: { type: Array },
         propsItem: { type: Object },
         errMsgs: { type: Object },
+        error: { type: Object },
         value: { type: Array },
         changeLabel: { type: Function },
         changeTypedform: { type: Function },
@@ -208,7 +219,6 @@ export default {
         //項目ごとのフォーム内容を変更
         parentChangeTypedform(){
             const typedForm = {
-                // id: this.id,
                 rules: [...this.selectRules],
                 maxLength: this.maxLength,
                 minValue: this.minValue,
