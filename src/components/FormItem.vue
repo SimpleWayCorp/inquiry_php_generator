@@ -6,21 +6,11 @@
             <input
             v-model="label"
             @input="parentChangeLabel"
-            :class="{
-                'is-invalid':
-                    error[`item${itemIndex}`] &&
-                    error[`item${itemIndex}`].validation &&
-                    error[`item${itemIndex}`].validation.label
-            }"
+            :class="{ 'is-invalid': isInvalidClass('label') }"
             class="w-100 form-control" type="text"
             >
             <span
-                v-show="
-                    error[`item${itemIndex}`] &&
-                    error[`item${itemIndex}`].validation &&
-                    error[`item${itemIndex}`].validation.label &&
-                    error[`item${itemIndex}`].validation.label.require
-                "
+                v-show="isInvalidFeedback('label', 'require')"
                 class="invalid-feedback"
             >
                 入力してください
@@ -28,8 +18,23 @@
         </div>
         <div class="row mb-4">
             <label class="form-label">項目ID</label>
-            <input v-model="id" @input="parentChangeLabel" :class="{ 'is-invalid': errMsgs.hasOwnProperty(`id${itemIndex}`) }" class="form-control" type="text">
-            <span v-if="errMsgs.hasOwnProperty(`id${itemIndex}`)" class="invalid-feedback">{{ errMsgs[`id${itemIndex}`] }}</span>
+            <input
+                v-model="id"
+                @input="parentChangeLabel"
+                :class="{
+                    'is-invalid': isInvalidClass('id') }" class="form-control" type="text">
+            <span
+                v-show="isInvalidFeedback('id', 'require')"
+                class="invalid-feedback"
+            >
+            入力してください
+            </span>
+            <span
+                v-show="isInvalidFeedback('id', 'halfAlphaNumeric')"
+                class="invalid-feedback"
+            >
+            半角英数字で入力してください
+            </span>
         </div>
         <div class="row mb-3">
             <div class="col-4">タイプ</div>
@@ -55,10 +60,12 @@
                         v-model="maxLength"
                         @input="parentChangeTypedform"
                         :disabled="!selectRules.some(rule => rule==='length')"
-                        :class="{ 'is-invalid': errMsgs.hasOwnProperty(`length${itemIndex}`) }"
+                        :class="{ 'is-invalid': isInvalidClass('maxLength') }"
                         type="text"><span>文字</span>
-                        <span v-if="errMsgs.hasOwnProperty(`length${itemIndex}`)" class="invalid-feedback">
-                            {{ errMsgs[`length${itemIndex}`] }}
+                        <span
+                            v-show="isInvalidFeedback('maxLength', 'naturalNumber')"
+                            class="invalid-feedback">
+                            自然数で入力してください
                         </span>
                     </div>
                     <div v-if="rule.hasOwnProperty('numberMin')">
@@ -67,10 +74,13 @@
                         v-model="minValue"
                         @input="parentChangeTypedform"
                         :disabled="!selectRules.some(rule => rule==='numberMin')"
-                        :class="{ 'is-invalid': errMsgs.hasOwnProperty(`numberMin${itemIndex}`) }"
+                        :class="{ 'is-invalid': isInvalidClass('numberMin') }"
                         type="text">
-                        <span v-if="errMsgs.hasOwnProperty(`numberMin${itemIndex}`)" class="invalid-feedback">
-                            {{ errMsgs[`numberMin${itemIndex}`] }}
+                        <span
+                            v-show="isInvalidFeedback('numberMin', 'integer')"
+                            class="invalid-feedback"
+                        >
+                        整数で入力してください
                         </span>
                     </div>
                     <div v-if="rule.hasOwnProperty('numberMax')">
@@ -79,10 +89,13 @@
                         v-model="maxValue"
                         @input="parentChangeTypedform"
                         :disabled="!selectRules.some(rule => rule==='numberMax')"
-                        :class="{ 'is-invalid': errMsgs.hasOwnProperty(`numberMax${itemIndex}`) }"
+                        :class="{ 'is-invalid': isInvalidClass('numberMax') }"
                         type="text">
-                        <span v-if="errMsgs.hasOwnProperty(`numberMax${itemIndex}`)" class="invalid-feedback">
-                            {{ errMsgs[`numberMax${itemIndex}`] }}
+                        <span
+                            v-show="isInvalidFeedback('numberMax', 'integer')"
+                            class="invalid-feedback"
+                        >
+                        整数で入力してください
                         </span>
                     </div>
                 </div>
@@ -104,7 +117,6 @@
                         </div>
                     </div>
                 </div>
-                {{ (this.propsItem.relatedIds) ? true: false }}
             </div>
         </div>
         <div v-if="typeValue==='text' || typeValue==='memo'" class="row">
@@ -189,6 +201,23 @@ export default {
                 ]
             }else{
                 return [{ rule: "requiredSelect", label: "必須選択" },]
+            }
+        },
+        isInvalidClass: function(){
+            return function (inputName) {
+                return  this.error.validation &&
+                        this.error.validation[`item${this.itemIndex}`] &&
+                        this.error.validation[`item${this.itemIndex}`].validation &&
+                        this.error.validation[`item${this.itemIndex}`].validation[inputName]
+            }
+        },
+        isInvalidFeedback: function(){
+            return function (inputName, rule) {
+                return  this.error.validation &&
+                        this.error.validation[`item${this.itemIndex}`] &&
+                        this.error.validation[`item${this.itemIndex}`].validation &&
+                        this.error.validation[`item${this.itemIndex}`].validation[inputName] &&
+                        this.error.validation[`item${this.itemIndex}`].validation[inputName][rule]
             }
         }
     },

@@ -33,7 +33,6 @@
               >
               半角英数字で入力してください
               </span>
-              {{ error }}
               <div class="form-text">※ 半角英数字・ハイフン・アンダースコアのみ</div>
           </div>
         </div>
@@ -245,6 +244,7 @@
         <div class="row mb-5">
           <label class="col-2">項目</label>
           <div v-if="isFileChange" class="col-10 p-0">
+            {{ error }}
 
             <form-item
             v-for="item,index in items"
@@ -286,6 +286,7 @@ import index from "../template/view/index.js"
 
 import { saveAs } from "file-saver"
 import JSZip from "jszip"
+import _ from "lodash"
 
 export default {
   name: 'App',
@@ -429,53 +430,53 @@ export default {
     deleteItem(index){
       this.items.splice(index, 1)
     },
-    //未入力チェック
-    unenteredCheck(checkForm, key){
-      if(!checkForm) this.$set(this.errMsgs, key, "入力必須です")
-    },
-    //整数チェック
-    integerCheck(checkForm, key){
-      const pattern = new RegExp("^[0-9]+$")
-      if(!pattern.test(checkForm) && checkForm){
-        this.$set(this.errMsgs, key, "整数で入力してください")
-      }
-    },
-    //自然数チェック
-    naturalNumberCheck(checkForm, key){
-      const pattern = new RegExp("^[1-9][0-9]*$")
-      if(!pattern.test(checkForm) && checkForm){
-        this.$set(this.errMsgs, key, "自然数で入力してください")
-      }
-    },
-    //半角英数字チェック（ハイフン、アンダースコアあり）
-    halfAlphanumericCheck(checkForm, key){
-      const pattern = new RegExp("^[\\w\\-]+$", "g")
-      if(!pattern.test(checkForm) && checkForm){
-        this.$set(this.errMsgs, key, "半角英数字で入力してください")
-      }
-    },
-    //メール形式チェック
-    mailCheck(checkForm, key){
-      const pattern = new RegExp("^[a-zA-Z0-9_.+-]+@([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\\.)+[a-zA-Z]{2,}$", "g")
-      if(!pattern.test(checkForm) && checkForm){
-        this.$set(this.errMsgs, key, "メール形式で入力してください")
-      }
-    },
-    //ディレクトリチェック（/から始まるか）
-    directoryCheck(checkForm, key){
-      const pattern = new RegExp("^\\/", "g")
-      if(!pattern.test(checkForm) && checkForm){
-        this.$set(this.errMsgs, key, "/から入力してください")
-      }
-    },
-    //フォルダー作成
-    createFolder(zip, path){
-      if(path.length === 1){
-        return zip.folder(`${path[0]}`)
-      }else{
-        return this.createFolder(zip.folder(`${path[0]}`), path.splice(1))
-      }
-    },
+    // //未入力チェック
+    // unenteredCheck(checkForm, key){
+    //   if(!checkForm) this.$set(this.errMsgs, key, "入力必須です")
+    // },
+    // //整数チェック
+    // integerCheck(checkForm, key){
+    //   const pattern = new RegExp("^[0-9]+$")
+    //   if(!pattern.test(checkForm) && checkForm){
+    //     this.$set(this.errMsgs, key, "整数で入力してください")
+    //   }
+    // },
+    // //自然数チェック
+    // naturalNumberCheck(checkForm, key){
+    //   const pattern = new RegExp("^[1-9][0-9]*$")
+    //   if(!pattern.test(checkForm) && checkForm){
+    //     this.$set(this.errMsgs, key, "自然数で入力してください")
+    //   }
+    // },
+    // //半角英数字チェック（ハイフン、アンダースコアあり）
+    // halfAlphanumericCheck(checkForm, key){
+    //   const pattern = new RegExp("^[\\w\\-]+$", "g")
+    //   if(!pattern.test(checkForm) && checkForm){
+    //     this.$set(this.errMsgs, key, "半角英数字で入力してください")
+    //   }
+    // },
+    // //メール形式チェック
+    // mailCheck(checkForm, key){
+    //   const pattern = new RegExp("^[a-zA-Z0-9_.+-]+@([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\\.)+[a-zA-Z]{2,}$", "g")
+    //   if(!pattern.test(checkForm) && checkForm){
+    //     this.$set(this.errMsgs, key, "メール形式で入力してください")
+    //   }
+    // },
+    // //ディレクトリチェック（/から始まるか）
+    // directoryCheck(checkForm, key){
+    //   const pattern = new RegExp("^\\/", "g")
+    //   if(!pattern.test(checkForm) && checkForm){
+    //     this.$set(this.errMsgs, key, "/から入力してください")
+    //   }
+    // },
+    // //フォルダー作成
+    // createFolder(zip, path){
+    //   if(path.length === 1){
+    //     return zip.folder(`${path[0]}`)
+    //   }else{
+    //     return this.createFolder(zip.folder(`${path[0]}`), path.splice(1))
+    //   }
+    // },
     // フォーム名バリデーション
     validateName(){
       let e = {}
@@ -577,31 +578,87 @@ export default {
       ) e.halfAlphaNumeric = true
       this.validationItemTemplate("id", e, index)
     },
+    //最大文字数バリデーション
+    validateItemLength(e, index){
+      const pattern = new RegExp("^[1-9][0-9]*$")
+      const isLength = this.items[index].rules.some(rule => rule==="length")
+      if (
+        isLength &&
+        !pattern.test(this.items[index].maxLength)
+      ) e.naturalNumber = true
+      this.validationItemTemplate("maxLength", e, index)
+    },
+    //最小値バリデーション
+    validateItemNumberMin(e, index){
+      const pattern = new RegExp("^[0-9]+$")
+      const isNumberMin = this.items[index].rules.some(rule => rule==="numberMin")
+      if (
+        isNumberMin &&
+        !pattern.test(this.items[index].numberMin)
+      ) e.integer = true
+      this.validationItemTemplate("numberMin", e, index)
+    },
+    //最大値バリデーション
+    validateItemNumberMax(e, index){
+      const pattern = new RegExp("^[0-9]+$")
+      const isNumberMax = this.items[index].rules.some(rule => rule==="numberMax")
+      if (
+        isNumberMax &&
+        !pattern.test(this.items[index].numberMax)
+      ) e.integer = true
+      this.validationItemTemplate("numberMax", e, index)
+    },
     //itemsバリデーション
     validateItems(){
       let e = {}
       for (let i = 0; i < this.items.length; i++){
-        this.validateItemLabel(e, i)
-        this.validateItemId(e, i)
+        this.validateItemLabel(_.cloneDeep(e), i)
+        this.validateItemId(_.cloneDeep(e), i)
+        this.validateItemLength(_.cloneDeep(e), i)
+        this.validateItemNumberMin(_.cloneDeep(e), i)
+        this.validateItemNumberMax(_.cloneDeep(e), i)
       }
     },
     validationItemTemplate(inputName, e, index){
-      if(Object.keys(e).length){
-        if (!this.error[`item${index}`]) {
-          this.$set(this.error, `item${index}`, {})
+      if (Object.keys(e).length){
+        if (!this.error.validation) {
+          this.$set(this.error, "validation", {})
         }
-        if (!this.error[`item${index}`].validation){
-          this.$set(this.error[`item${index}`], "validation", {})
+        if (!this.error.validation[`item${index}`]) {
+          this.$set(this.error.validation, `item${index}`, {})
         }
-        this.$set(this.error[`item${index}`].validation, inputName, e)
-      } else if (this.error[`item${index}`].validation && this.error[`item${index}`].validation[inputName]) {
-          delete this.error[`item${index}`].validation[inputName]
-      }
-      if (this.error[`item${index}`].validation &&
-        Object.keys(this.error[`item${index}`].validation).length === 0)
+        if (!this.error.validation[`item${index}`].validation) {
+          this.$set(this.error.validation[`item${index}`], "validation", {})
+        }
+        this.$set(this.error.validation[`item${index}`].validation, inputName, e)
+      } else if (
+        this.error.validation[`item${index}`] &&
+        this.error.validation[`item${index}`].validation[inputName])
       {
-        delete this.error[`item${index}`].validation
+        delete this.error.validation[`item${index}`].validation[inputName]
       }
+
+      if (this.error.validation[`item${index}`].validation &&
+        Object.keys(this.error.validation[`item${index}`].validation).length === 0)
+      {
+        delete this.error.validation[`item${index}`].validation
+      }
+      // if(Object.keys(e).length){
+      //   if (!this.error[`item${index}`]) {
+      //     this.$set(this.error, `item${index}`, {})
+      //   }
+      //   if (!this.error[`item${index}`].validation){
+      //     this.$set(this.error[`item${index}`], "validation", {})
+      //   }
+      //   this.$set(this.error[`item${index}`].validation, inputName, e)
+      // } else if (this.error[`item${index}`].validation && this.error[`item${index}`].validation[inputName]) {
+      //     delete this.error[`item${index}`].validation[inputName]
+      // }
+      // if (this.error[`item${index}`].validation &&
+      //   Object.keys(this.error[`item${index}`].validation).length === 0)
+      // {
+      //   delete this.error[`item${index}`].validation
+      // }
     },
     validationTemplate(inputName, e){
       if (Object.keys(e).length){
@@ -637,7 +694,7 @@ export default {
       //formName validation
       this.validation()
 
-      //未入力チェック
+      // // 未入力チェック
       // this.unenteredCheck(this.formName, "formName")
       // this.unenteredCheck(this.subject, "subject")
       // this.unenteredCheck(this.from, "from")
@@ -649,44 +706,44 @@ export default {
       //   this.unenteredCheck(this.bcc[i].address, `bcc${i}`)
       // }
 
-      for(let i=0; i<this.items.length; i++){
-        this.unenteredCheck(this.items[i].label, `label${i}`)
-        this.unenteredCheck(this.items[i].id, `id${i}`)
-      }
+      // for(let i=0; i<this.items.length; i++){
+      //   this.unenteredCheck(this.items[i].label, `label${i}`)
+      //   this.unenteredCheck(this.items[i].id, `id${i}`)
+      // }
 
-      //半角英数字チェック
-      this.halfAlphanumericCheck(this.formName, "formName")
-      for(let i=0; i<this.items.length; i++){
-        this.halfAlphanumericCheck(this.items[i].id, `id${i}`)
-      }
+      // //半角英数字チェック
+      // this.halfAlphanumericCheck(this.formName, "formName")
+      // for(let i=0; i<this.items.length; i++){
+      //   this.halfAlphanumericCheck(this.items[i].id, `id${i}`)
+      // }
 
-      //mail形式チェック
-      this.mailCheck(this.from, "from")
-      for(let i=0; i<this.bcc.length; i++){
-        this.mailCheck(this.bcc[i].address, `bcc${i}`)
-      }
+      // //mail形式チェック
+      // this.mailCheck(this.from, "from")
+      // for(let i=0; i<this.bcc.length; i++){
+      //   this.mailCheck(this.bcc[i].address, `bcc${i}`)
+      // }
 
-      //ディレクトリチェック
-      this.directoryCheck(this.publicPath, "publicPath")
-      this.directoryCheck(this.privatePath, "privatePath")
-      this.directoryCheck(this.urlPath, "urlPath")
+      // //ディレクトリチェック
+      // this.directoryCheck(this.publicPath, "publicPath")
+      // this.directoryCheck(this.privatePath, "privatePath")
+      // this.directoryCheck(this.urlPath, "urlPath")
 
-      //項目入力チェック
-      for(let i=0; i<this.items.length; i++){
-        if(this.items[i].rules.some(rule => rule==="length")){
-          this.naturalNumberCheck(this.items[i].maxLength, `length${i}`)
-        }
+      // //項目入力チェック
+      // for(let i=0; i<this.items.length; i++){
+      //   if(this.items[i].rules.some(rule => rule==="length")){
+      //     this.naturalNumberCheck(this.items[i].maxLength, `length${i}`)
+      //   }
 
-        if(this.items[i].rules.some(rule => rule==="numberMin")){
-          this.integerCheck(this.items[i].minValue, `numberMin${i}`)
-        }
+      //   if(this.items[i].rules.some(rule => rule==="numberMin")){
+      //     this.integerCheck(this.items[i].minValue, `numberMin${i}`)
+      //   }
 
-        if(this.items[i].rules.some(rule => rule==="numberMax")){
-          this.integerCheck(this.items[i].maxValue, `numberMax${i}`)
-        }
-      }
+      //   if(this.items[i].rules.some(rule => rule==="numberMax")){
+      //     this.integerCheck(this.items[i].maxValue, `numberMax${i}`)
+      //   }
+      // }
 
-      if(!Object.keys(this.errMsgs).length){
+      if(!this.error.validation){
         const zip = new JSZip()
         const upperCamelUrl = this.toUpperCamel(this.urlPath)
 
