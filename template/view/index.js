@@ -8,7 +8,7 @@ const createConfirmForm = (items, relatedIdsItems) => {
 			typedInput = `<?php echo nl2br($${curr.id}); ?>`
 		}else if(curr.type==="checkbox"){
 			typedInput = `<?php echo $${curr.id}; ?>`
-		}else if(curr.relatedIds[0].relatedId){
+		}else if(curr.relatedIds[0]){
 			typedInput = relatedIdsItems.reduce((acc, curr, currIndex) => {
 				if(relatedIdsItems.length-1 === currIndex){
 					acc += `<?php echo $${curr.id}; ?>`
@@ -74,15 +74,16 @@ const createEnteredForm = (items) => {
 const findIndexes = (items) => {
 	let indexes = []
 	items.map((item) => {
-		if(item.relatedIds[0].relatedId) indexes.push(item.id)
+		if(item.relatedIds[0]) indexes.push(item.id)
 	})
 	return indexes.splice(1)
 }
 
 const index = (items) => {
+	console.log(items)
 
 	//relatedIdsが空でないもの
-	const relatedIdsItems = items.filter(item => item.relatedIds[0].relatedId)
+	const relatedIdsItems = items.filter(item => item.relatedIds[0])
 
 	//itemsのrelatedIdsが空でないものを一つにまとめる
 	const formItems = items.filter(item => {

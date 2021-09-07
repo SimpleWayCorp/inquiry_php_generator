@@ -263,6 +263,7 @@
             <div class="d-flex justify-content-center "><button @click="addItem" class="btn btn-primary">項目を追加</button></div>
           </div>
         </div>
+        {{ items }}
         <div class="row">
           <button @click="downLoad" class="btn btn-primary">ダウンロード</button>
         </div>
@@ -283,6 +284,7 @@ import config from "../template/app/config.js"
 import body from "../template/view/mail/body.js"
 import subject from "../template/view/mail/subject.js"
 import index from "../template/view/index.js"
+import buildConfig from "../template/build/buildConfig.js"
 
 import { saveAs } from "file-saver"
 import JSZip from "jszip"
@@ -430,53 +432,14 @@ export default {
     deleteItem(index){
       this.items.splice(index, 1)
     },
-    // //未入力チェック
-    // unenteredCheck(checkForm, key){
-    //   if(!checkForm) this.$set(this.errMsgs, key, "入力必須です")
-    // },
-    // //整数チェック
-    // integerCheck(checkForm, key){
-    //   const pattern = new RegExp("^[0-9]+$")
-    //   if(!pattern.test(checkForm) && checkForm){
-    //     this.$set(this.errMsgs, key, "整数で入力してください")
-    //   }
-    // },
-    // //自然数チェック
-    // naturalNumberCheck(checkForm, key){
-    //   const pattern = new RegExp("^[1-9][0-9]*$")
-    //   if(!pattern.test(checkForm) && checkForm){
-    //     this.$set(this.errMsgs, key, "自然数で入力してください")
-    //   }
-    // },
-    // //半角英数字チェック（ハイフン、アンダースコアあり）
-    // halfAlphanumericCheck(checkForm, key){
-    //   const pattern = new RegExp("^[\\w\\-]+$", "g")
-    //   if(!pattern.test(checkForm) && checkForm){
-    //     this.$set(this.errMsgs, key, "半角英数字で入力してください")
-    //   }
-    // },
-    // //メール形式チェック
-    // mailCheck(checkForm, key){
-    //   const pattern = new RegExp("^[a-zA-Z0-9_.+-]+@([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\\.)+[a-zA-Z]{2,}$", "g")
-    //   if(!pattern.test(checkForm) && checkForm){
-    //     this.$set(this.errMsgs, key, "メール形式で入力してください")
-    //   }
-    // },
-    // //ディレクトリチェック（/から始まるか）
-    // directoryCheck(checkForm, key){
-    //   const pattern = new RegExp("^\\/", "g")
-    //   if(!pattern.test(checkForm) && checkForm){
-    //     this.$set(this.errMsgs, key, "/から入力してください")
-    //   }
-    // },
-    // //フォルダー作成
-    // createFolder(zip, path){
-    //   if(path.length === 1){
-    //     return zip.folder(`${path[0]}`)
-    //   }else{
-    //     return this.createFolder(zip.folder(`${path[0]}`), path.splice(1))
-    //   }
-    // },
+    //フォルダー作成
+    createFolder(zip, path){
+      if(path.length === 1){
+        return zip.folder(`${path[0]}`)
+      }else{
+        return this.createFolder(zip.folder(`${path[0]}`), path.splice(1))
+      }
+    },
     // フォーム名バリデーション
     validateName(){
       let e = {}
@@ -552,15 +515,17 @@ export default {
     //bccバリデーション
     validateBcc(){
       let e = {}
-      const pattern = new RegExp("^[a-zA-Z0-9_.+-]+@([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\\.)+[a-zA-Z]{2,}$", "g")
-      for (let i = 0; i < this.bcc.length; i++){
-        if (!this.bcc[i].address) e[`require${i}`] = true
-        if (
-          !pattern.test(this.bcc[i].address) &&
-          this.bcc[i].address
-        ) e[`mail${i}`] = true
+      for (let i = 0; i < this.bcc.length; i++) {
+        this.bccLoop(_.cloneDeep(e), i)
       }
-
+    },
+    bccLoop(e, index){
+      const pattern = new RegExp("^[a-zA-Z0-9_.+-]+@([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\\.)+[a-zA-Z]{2,}$", "g")
+      if (!this.bcc[index].address) e[`require${index}`] = true
+      if (
+        !pattern.test(this.bcc[index].address) &&
+        this.bcc[index].address
+      ) e[`mail${index}`] = true
       this.validationTemplate("bcc", e)
     },
     //itemの見出しバリデーション
@@ -576,6 +541,7 @@ export default {
         !pattern.test(this.items[index].id) &&
         this.items[index].id
       ) e.halfAlphaNumeric = true
+      // console.log(e)
       this.validationItemTemplate("id", e, index)
     },
     //最大文字数バリデーション
@@ -632,33 +598,17 @@ export default {
         }
         this.$set(this.error.validation[`item${index}`].validation, inputName, e)
       } else if (
-        this.error.validation[`item${index}`] &&
-        this.error.validation[`item${index}`].validation[inputName])
-      {
-        delete this.error.validation[`item${index}`].validation[inputName]
+        this.error.validation &&
+        this.error.validation[inputName]
+      ){
+        delete this.error.validation[inputName]
       }
 
-      if (this.error.validation[`item${index}`].validation &&
-        Object.keys(this.error.validation[`item${index}`].validation).length === 0)
+      if (this.error.validation &&
+          Object.keys(this.error.validation).length === 0)
       {
-        delete this.error.validation[`item${index}`].validation
+        delete this.error.validation
       }
-      // if(Object.keys(e).length){
-      //   if (!this.error[`item${index}`]) {
-      //     this.$set(this.error, `item${index}`, {})
-      //   }
-      //   if (!this.error[`item${index}`].validation){
-      //     this.$set(this.error[`item${index}`], "validation", {})
-      //   }
-      //   this.$set(this.error[`item${index}`].validation, inputName, e)
-      // } else if (this.error[`item${index}`].validation && this.error[`item${index}`].validation[inputName]) {
-      //     delete this.error[`item${index}`].validation[inputName]
-      // }
-      // if (this.error[`item${index}`].validation &&
-      //   Object.keys(this.error[`item${index}`].validation).length === 0)
-      // {
-      //   delete this.error[`item${index}`].validation
-      // }
     },
     validationTemplate(inputName, e){
       if (Object.keys(e).length){
@@ -694,56 +644,8 @@ export default {
       //formName validation
       this.validation()
 
-      // // 未入力チェック
-      // this.unenteredCheck(this.formName, "formName")
-      // this.unenteredCheck(this.subject, "subject")
-      // this.unenteredCheck(this.from, "from")
-      // this.unenteredCheck(this.publicPath, "publicPath")
-      // this.unenteredCheck(this.privatePath, "privatePath")
-      // this.unenteredCheck(this.urlPath, "urlPath")
-
-      // for(let i=0; i<this.bcc.length; i++){
-      //   this.unenteredCheck(this.bcc[i].address, `bcc${i}`)
-      // }
-
-      // for(let i=0; i<this.items.length; i++){
-      //   this.unenteredCheck(this.items[i].label, `label${i}`)
-      //   this.unenteredCheck(this.items[i].id, `id${i}`)
-      // }
-
-      // //半角英数字チェック
-      // this.halfAlphanumericCheck(this.formName, "formName")
-      // for(let i=0; i<this.items.length; i++){
-      //   this.halfAlphanumericCheck(this.items[i].id, `id${i}`)
-      // }
-
-      // //mail形式チェック
-      // this.mailCheck(this.from, "from")
-      // for(let i=0; i<this.bcc.length; i++){
-      //   this.mailCheck(this.bcc[i].address, `bcc${i}`)
-      // }
-
-      // //ディレクトリチェック
-      // this.directoryCheck(this.publicPath, "publicPath")
-      // this.directoryCheck(this.privatePath, "privatePath")
-      // this.directoryCheck(this.urlPath, "urlPath")
-
-      // //項目入力チェック
-      // for(let i=0; i<this.items.length; i++){
-      //   if(this.items[i].rules.some(rule => rule==="length")){
-      //     this.naturalNumberCheck(this.items[i].maxLength, `length${i}`)
-      //   }
-
-      //   if(this.items[i].rules.some(rule => rule==="numberMin")){
-      //     this.integerCheck(this.items[i].minValue, `numberMin${i}`)
-      //   }
-
-      //   if(this.items[i].rules.some(rule => rule==="numberMax")){
-      //     this.integerCheck(this.items[i].maxValue, `numberMax${i}`)
-      //   }
-      // }
-
       if(!this.error.validation){
+        console.log(this.items)
         const zip = new JSZip()
         const upperCamelUrl = this.toUpperCamel(this.urlPath)
 
@@ -758,7 +660,11 @@ export default {
         //Buildフォルダー作成
         const BuildFolder = privateFolder.folder("Build")
         const privateUrlFolder = this.createFolder(BuildFolder, this.pathToArray(this.urlPath))
-        privateUrlFolder.file("build_config.json", '{ "message": "hello" }')
+        privateUrlFolder.file(
+          "build_config.json",
+          buildConfig(this.formName, this.subject, this.from, this.bcc, this.publicPath,
+                      this.privatePath, this.urlPath, this.items
+        ))
 
         //Appフォルダー作成
         const AppFolder = privateFolder.folder("App")

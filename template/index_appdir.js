@@ -1,4 +1,4 @@
-const app_dir = (urlArray, privatePath) => {
+const createAppDir = (urlArray, privatePath) => {
 
     return urlArray.reduce((acc) => {
         acc = `../${acc}`
@@ -6,4 +6,4 @@ const app_dir = (urlArray, privatePath) => {
     }, `../${privatePath.split("/").splice(3).join("/")}/App`)
 }
 
-export default app_dir
+export default createAppDir
