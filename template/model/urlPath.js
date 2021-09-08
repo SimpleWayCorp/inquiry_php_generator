@@ -6,7 +6,7 @@ const urlPath = (upperCamelUrl, items) => {
         let defaultVal = "''"
         let choices = ""
         let relatedRule = ""
-        const relatedIds = curr.relatedIds.map(relatedId => relatedId.relatedId)
+        const relatedIds = curr.relatedIds.map(relatedId => relatedId)
 
         if(curr.type==="select"){
             dataType = "$this->COLUMN_TYPE_SMALLINT"

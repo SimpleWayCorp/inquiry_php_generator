@@ -244,7 +244,6 @@
         <div class="row mb-5">
           <label class="col-2">項目</label>
           <div v-if="isFileChange" class="col-10 p-0">
-            {{ error }}
 
             <form-item
             v-for="item,index in items"
@@ -253,7 +252,6 @@
             :item-index="index"
             :props-items="items"
             :props-item="item"
-            :err-msgs="errMsgs"
             :error="error"
             :change-label="changeLabelAndId"
             :change-typedform="changeTypedForm"
@@ -263,7 +261,6 @@
             <div class="d-flex justify-content-center "><button @click="addItem" class="btn btn-primary">項目を追加</button></div>
           </div>
         </div>
-        {{ items }}
         <div class="row">
           <button @click="downLoad" class="btn btn-primary">ダウンロード</button>
         </div>
@@ -395,7 +392,6 @@ export default {
       }
     },
     changeTypedForm(typedForm, index){
-      // this.items[index].id = typedForm.id
       this.items[index].rules = typedForm.rules
       this.items[index].maxLength = typedForm.maxLength
       this.items[index].minValue = typedForm.minValue
@@ -408,8 +404,6 @@ export default {
     changeLabelAndId(index, label, id){
       this.$set(this.items[index], "label", label)
       this.$set(this.items[index], "id", id)
-      // this.items[index].label = label
-      // this.items[index].id = id
     },
     addBcc(){
       const newId = this.bcc.slice(-1)[0].id+1
@@ -638,14 +632,9 @@ export default {
     },
     //ダウンロード動作
     downLoad(){
-      //エラー初期化
-      this.errMsgs = {}
-
-      //formName validation
       this.validation()
 
       if(!this.error.validation){
-        console.log(this.items)
         const zip = new JSZip()
         const upperCamelUrl = this.toUpperCamel(this.urlPath)
 

@@ -1,5 +1,4 @@
 const convertItems = (items) => {
-    console.log(items)
     return items.map(item => {
         item.relatedIds = item.relatedIds.map(relatedId => {
             return relatedId.relatedId
@@ -16,18 +15,18 @@ const buildConfig = (
     privatePath, urlPath, items
 ) => {
 
-    const stringBcc = bcc.map(bccobj => `'${bccobj.address}'`)
+    const stringBcc = bcc.map(bccobj => `"${bccobj.address}"`)
 
-    return `
-    "name": ${name},
-    "subject": ${subject},
-    "from": ${from},
+    return `{
+    "name": "${name}",
+    "subject": "${subject}",
+    "from": "${from}",
     "bcc": [${stringBcc}],
-    "publicPath": ${publicPath},
-    "privatePath": ${privatePath},
-    "urlPath": ${urlPath},
-    "items": ${convertItems([...items])}
-    `
+    "publicPath": "${publicPath}",
+    "privatePath": "${privatePath}",
+    "urlPath": "${urlPath}",
+    "items": ${JSON.stringify(convertItems([...items]))}
+    }`
 }
 
 export default buildConfig

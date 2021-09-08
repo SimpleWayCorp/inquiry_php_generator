@@ -80,7 +80,6 @@ const findIndexes = (items) => {
 }
 
 const index = (items) => {
-	console.log(items)
 
 	//relatedIdsが空でないもの
 	const relatedIdsItems = items.filter(item => item.relatedIds[0])

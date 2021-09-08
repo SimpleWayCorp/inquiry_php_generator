@@ -153,7 +153,6 @@ export default {
         deleteItem: { type: Function },
         propsItems: { type: Array },
         propsItem: { type: Object },
-        errMsgs: { type: Object },
         error: { type: Object },
         value: { type: Array },
         changeLabel: { type: Function },
@@ -233,7 +232,6 @@ export default {
         initialRules(){
             this.selectRules = []
             const typedForm = {
-                // id: null,
                 rules: [],
                 maxLength: null,
                 minValue: null,
@@ -262,9 +260,6 @@ export default {
         parentChangeLabel(){
             this.changeLabel(this.itemIndex, this.label, this.id)
         },
-        //==========================
-        //追加処理
-        //==========================
         addChoice(){
             const newId = this.choices.slice(-1)[0].id + 1
             this.choices.push({
@@ -282,9 +277,6 @@ export default {
             })
             this.parentChangeTypedform()
         },
-        //==========================
-        //削除処理
-        //==========================
         //選択肢
         deleteChoice(index){
             this.choices.splice(index, 1)
