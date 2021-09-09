@@ -285,7 +285,6 @@
                 <div class="row mb-5">
                     <label class="col-2">項目</label>
                     <div v-if="isFileChange" class="col-10 p-0">
-
                         <form-item
                             v-for="(item, index) in items"
                             :key="index"
@@ -408,18 +407,18 @@ export default {
             }
         },
         //itemsのrelatedIdsとchoicesを変換
-        convertRelatedIdsAndChoices(){
-          return [...this.items].map(item => {
-            const newItem = _.cloneDeep(item)
-            newItem.relatedIds = newItem.relatedIds.map(relatedId => {
-              return relatedId.relatedId
+        convertRelatedIdsAndChoices() {
+            return [...this.items].map((item) => {
+                const newItem = _.cloneDeep(item)
+                newItem.relatedIds = newItem.relatedIds.map((relatedId) => {
+                    return relatedId.relatedId
+                })
+                newItem.choices = newItem.choices.map((choice) => {
+                    return choice.choice
+                })
+                return newItem
             })
-            newItem.choices = newItem.choices.map(choice => {
-              return choice.choice
-            })
-            return newItem
-          })
-        }
+        },
     },
     methods: {
         updateIsFileChange() {
@@ -497,7 +496,7 @@ export default {
                 maxValue: null,
                 choices: [{ id: 1, choice: null }],
                 to: false,
-                type: 'text'
+                type: 'text',
             })
         },
         deleteBcc(index) {
@@ -611,7 +610,6 @@ export default {
             if (!this.items[index].id) e.require = true
             if (!pattern.test(this.items[index].id) && this.items[index].id)
                 e.halfAlphaNumeric = true
-            // console.log(e)
             this.validationItemTemplate('id', e, index)
         },
         //最大文字数バリデーション
@@ -787,7 +785,7 @@ export default {
 
                 //ファイル作成
                 AppFolder.file('config.php', config(this.from, this.bcc))
-                viewUrlFolder.file('index.php', index(items))
+                viewUrlFolder.file(`${upperCamelUrl}.php`, index(items))
                 mail.file('body.php', body)
                 mail.file('subject.php', subject)
                 controller.file(

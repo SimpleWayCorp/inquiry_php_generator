@@ -33,7 +33,7 @@ const createConfirmForm = (items, relatedIdsItems) => {
 }
 
 //入力画面部分のhtml作成
-const createEnteredForm = (items) => {
+const createEnteredForm = (items, relatedIdsItems) => {
     return items.reduce((acc, curr) => {
         let typedInput = ''
         let textMuted = ''
@@ -58,7 +58,24 @@ const createEnteredForm = (items) => {
             typedInput = `<input type="checkbox" id="${curr.id}" name="${
                 curr.id
             }" ${curr.to ? 'checked' : ''}>`
-        } else {
+        } else if (curr.relatedIds[0]) {
+            typedInput = relatedIdsItems.reduce((acc, curr, currIndex) => {
+                if (relatedIdsItems.length - 1 === currIndex) {
+                    acc += `
+					<input type="text" id="${curr.id}" name="${curr.id}" value="<?php echo $${curr.id}; ?>" class="form-control" placeholder="090" ${requiredVal}>
+					<div class="input-group-prepend input-group-apend">
+						<div class="input-group-text">-</div>
+					</div>
+					`
+                } else {
+                    acc += `
+					<input type="text" id="${curr.id}" name="${curr.id}" value="<?php echo $${curr.id}; ?>" class="form-control" placeholder="090" ${requiredVal}>
+					</div>
+					`
+                }
+                return acc
+            }, '<div class="input-group">')
+        } else if (curr.type === 'text') {
             typedInput = `<input type="text" id="${curr.id}" name="${curr.id}" value="<?php echo $${curr.id}; ?>" class="form-control" placeholder="" ${requiredVal}>`
         }
 
@@ -82,7 +99,7 @@ const findIndexes = (items) => {
     items.map((item) => {
         if (item.relatedIds[0]) indexes.push(item.id)
     })
-    return indexes.splice(1)
+    return indexes.length !== 0 ? indexes.splice(1) : []
 }
 
 const index = (items) => {
@@ -91,7 +108,7 @@ const index = (items) => {
 
     //itemsのrelatedIdsが空でないものを一つにまとめる
     const formItems = items.filter((item) => {
-        const pattern = new RegExp(findIndexes(items).join('|'))
+        const pattern = new RegExp(`${findIndexes(items).join('|')}`)
         return !pattern.test(item.id)
     })
 
@@ -100,7 +117,7 @@ const index = (items) => {
         return acc
     }, '')
     const confirmForm = createConfirmForm(formItems, relatedIdsItems)
-    const enteredForm = createEnteredForm(formItems)
+    const enteredForm = createEnteredForm(formItems, relatedIdsItems)
 
     return `
 	<!doctype html>

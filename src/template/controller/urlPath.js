@@ -29,7 +29,7 @@ const urlPath = (upperCamelUrl, path) => {
             $render['token'] = $csrf->generate();
             $render += $contact->toArray();
             $sanitize->html($render);
-            $this->render('contact.php', $render);
+            $this->render('${upperCamelUrl}.php', $render);
         }
     
         function action_confirm()
@@ -54,7 +54,7 @@ const urlPath = (upperCamelUrl, path) => {
             $render['token'] = $csrf->generate();
             $render += $contact->toArray();
             $sanitize->html($render);
-            $this->render('contact.php', $render);
+            $this->render('${upperCamelUrl}.php', $render);
         }
     
         function action_complete()

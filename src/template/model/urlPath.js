@@ -13,6 +13,12 @@ const urlPath = (upperCamelUrl, items) => {
                 (choice) => `'${choice}'`
             )}),`
         }
+        if (curr.type === 'text') {
+            dataType = '$this->COLUMN_TYPE_CHAR'
+        }
+        if (curr.type === 'memo') {
+            dataType = '$this->COLUMN_TYPE_CLOB'
+        }
 
         if (relatedIds[0]) {
             relatedRule = `, 'requiredWith|${relatedIds.join('|')}'`
