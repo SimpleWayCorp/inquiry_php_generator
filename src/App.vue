@@ -285,6 +285,7 @@
                 <div class="row mb-5">
                     <label class="col-2">項目</label>
                     <div v-if="isFileChange" class="col-10 p-0">
+
                         <form-item
                             v-for="(item, index) in items"
                             :key="index"
@@ -406,6 +407,19 @@ export default {
                     .join('')
             }
         },
+        //itemsのrelatedIdsとchoicesを変換
+        convertRelatedIdsAndChoices(){
+          return [...this.items].map(item => {
+            const newItem = _.cloneDeep(item)
+            newItem.relatedIds = newItem.relatedIds.map(relatedId => {
+              return relatedId.relatedId
+            })
+            newItem.choices = newItem.choices.map(choice => {
+              return choice.choice
+            })
+            return newItem
+          })
+        }
     },
     methods: {
         updateIsFileChange() {
@@ -474,8 +488,16 @@ export default {
             const newId = this.items.slice(-1)[0].itemId + 1
             this.items.push({
                 itemId: newId,
-                label: '',
-                id: '',
+                label: null,
+                id: null,
+                rules: [],
+                relatedIds: [{ id: 1, relatedId: null }],
+                maxLength: null,
+                minValue: null,
+                maxValue: null,
+                choices: [{ id: 1, choice: null }],
+                to: false,
+                type: 'text'
             })
         },
         deleteBcc(index) {
@@ -655,9 +677,9 @@ export default {
                 )
             } else if (
                 this.error.validation &&
-                this.error.validation[inputName]
+                this.error.validation[`item${index}`]
             ) {
-                delete this.error.validation[inputName]
+                delete this.error.validation[`item${index}`]
             }
 
             if (
@@ -700,9 +722,11 @@ export default {
         //ダウンロード動作
         downLoad() {
             this.validation()
+            this.updateIsFileChange()
 
             if (!this.error.validation) {
                 const zip = new JSZip()
+                const items = this.convertRelatedIdsAndChoices
                 const upperCamelUrl = this.toUpperCamel(this.urlPath)
 
                 //=============publicフォルダー作成==============
@@ -745,7 +769,7 @@ export default {
                         this.publicPath,
                         this.privatePath,
                         this.urlPath,
-                        this.items
+                        items
                     )
                 )
 
@@ -763,7 +787,7 @@ export default {
 
                 //ファイル作成
                 AppFolder.file('config.php', config(this.from, this.bcc))
-                viewUrlFolder.file('index.php', index(this.items))
+                viewUrlFolder.file('index.php', index(items))
                 mail.file('body.php', body)
                 mail.file('subject.php', subject)
                 controller.file(
@@ -773,7 +797,7 @@ export default {
                 controller.file('Base.php', controllerBase)
                 model.file(
                     `${upperCamelUrl}.php`,
-                    modelUrlPath(upperCamelUrl, this.items)
+                    modelUrlPath(upperCamelUrl, items)
                 )
                 model.file('Base.php', modelBase)
 

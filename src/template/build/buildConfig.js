@@ -1,15 +1,3 @@
-const convertItems = (items) => {
-    return items.map((item) => {
-        item.relatedIds = item.relatedIds.map((relatedId) => {
-            return relatedId.relatedId
-        })
-        item.choices = item.choices.map((choice) => {
-            return choice.choice
-        })
-        return item
-    })
-}
-
 const buildConfig = (
     name,
     subject,
@@ -30,7 +18,7 @@ const buildConfig = (
     "publicPath": "${publicPath}",
     "privatePath": "${privatePath}",
     "urlPath": "${urlPath}",
-    "items": ${JSON.stringify(convertItems([...items]))}
+    "items": ${JSON.stringify(items)}
     }`
 }
 
