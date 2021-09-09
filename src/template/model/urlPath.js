@@ -1,21 +1,21 @@
 const urlPath = (upperCamelUrl, items) => {
-
     const columns = items.reduce((acc, curr) => {
-
-        let dataType = "$this->COLUMN_TYPE_SMALLINT"
+        let dataType = '$this->COLUMN_TYPE_SMALLINT'
         let defaultVal = "''"
-        let choices = ""
-        let relatedRule = ""
-        const relatedIds = curr.relatedIds.map(relatedId => relatedId)
+        let choices = ''
+        let relatedRule = ''
+        const relatedIds = curr.relatedIds.map((relatedId) => relatedId)
 
-        if(curr.type==="select"){
-            dataType = "$this->COLUMN_TYPE_SMALLINT"
-            defaultVal = "0"
-            choices = `'choices' => array(${curr.choices.map(choice => `'${choice}'`)}),`
+        if (curr.type === 'select') {
+            dataType = '$this->COLUMN_TYPE_SMALLINT'
+            defaultVal = '0'
+            choices = `'choices' => array(${curr.choices.map(
+                (choice) => `'${choice}'`
+            )}),`
         }
 
-        if(relatedIds[0]){
-            relatedRule = `, 'requiredWith|${relatedIds.join("|")}'`
+        if (relatedIds[0]) {
+            relatedRule = `, 'requiredWith|${relatedIds.join('|')}'`
         }
 
         acc += `
@@ -24,12 +24,14 @@ const urlPath = (upperCamelUrl, items) => {
             'label' => '${curr.label}',
             'caption' => '${curr.label}',
             'default' => ${defaultVal},
-            'rule' => array(${curr.rules.map(rule => `'${rule}'`)}${relatedRule}),
+            'rule' => array(${curr.rules.map(
+                (rule) => `'${rule}'`
+            )}${relatedRule}),
             ${choices}
         ),\n`
 
         return acc
-    }, "")
+    }, '')
 
     return `
     <?php

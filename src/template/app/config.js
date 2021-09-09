@@ -1,6 +1,5 @@
 const config = (from, bccs) => {
-
-    const stringBcc =  bccs.map(bccobj => `'${bccobj.address}'`)
+    const stringBcc = bccs.map((bccobj) => `'${bccobj.address}'`)
 
     return `
     <?php

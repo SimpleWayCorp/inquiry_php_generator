@@ -1,9 +1,9 @@
 const convertItems = (items) => {
-    return items.map(item => {
-        item.relatedIds = item.relatedIds.map(relatedId => {
+    return items.map((item) => {
+        item.relatedIds = item.relatedIds.map((relatedId) => {
             return relatedId.relatedId
         })
-        item.choices = item.choices.map(choice => {
+        item.choices = item.choices.map((choice) => {
             return choice.choice
         })
         return item
@@ -11,11 +11,16 @@ const convertItems = (items) => {
 }
 
 const buildConfig = (
-    name, subject, from, bcc, publicPath,
-    privatePath, urlPath, items
+    name,
+    subject,
+    from,
+    bcc,
+    publicPath,
+    privatePath,
+    urlPath,
+    items
 ) => {
-
-    const stringBcc = bcc.map(bccobj => `"${bccobj.address}"`)
+    const stringBcc = bcc.map((bccobj) => `"${bccobj.address}"`)
 
     return `{
     "name": "${name}",

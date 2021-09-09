@@ -1,62 +1,68 @@
 //確認画面部分のhtml作成
 const createConfirmForm = (items, relatedIdsItems) => {
-	return items.reduce((acc, curr) => {
-		let typedInput = ""
-		if(curr.type==="select"){
-			typedInput = `<?php echo $contact->choice('${curr.id}', $${curr.id}); ?>`
-		}else if(curr.type==="memo"){
-			typedInput = `<?php echo nl2br($${curr.id}); ?>`
-		}else if(curr.type==="checkbox"){
-			typedInput = `<?php echo $${curr.id}; ?>`
-		}else if(curr.relatedIds[0]){
-			typedInput = relatedIdsItems.reduce((acc, curr, currIndex) => {
-				if(relatedIdsItems.length-1 === currIndex){
-					acc += `<?php echo $${curr.id}; ?>`
-				}else{
-					acc += `<?php echo $${curr.id}; ?> - `
-				}
-				return acc
-			}, "")
-		}else{
-			typedInput = `<?php echo $${curr.id}; ?>`
-		}
+    return items.reduce((acc, curr) => {
+        let typedInput = ''
+        if (curr.type === 'select') {
+            typedInput = `<?php echo $contact->choice('${curr.id}', $${curr.id}); ?>`
+        } else if (curr.type === 'memo') {
+            typedInput = `<?php echo nl2br($${curr.id}); ?>`
+        } else if (curr.type === 'checkbox') {
+            typedInput = `<?php echo $${curr.id}; ?>`
+        } else if (curr.relatedIds[0]) {
+            typedInput = relatedIdsItems.reduce((acc, curr, currIndex) => {
+                if (relatedIdsItems.length - 1 === currIndex) {
+                    acc += `<?php echo $${curr.id}; ?>`
+                } else {
+                    acc += `<?php echo $${curr.id}; ?> - `
+                }
+                return acc
+            }, '')
+        } else {
+            typedInput = `<?php echo $${curr.id}; ?>`
+        }
 
-		acc += `
+        acc += `
 		<div class="form-group row">
 			<label class="col-sm-2 col-form-label">${curr.label}</label>
 			<div class="col-sm-10">
 				<div class="my-2">${typedInput}</div>
 			</div>
 		</div>\n`
-		return acc
-	}, "")
+        return acc
+    }, '')
 }
 
 //入力画面部分のhtml作成
 const createEnteredForm = (items) => {
-	return items.reduce((acc, curr) => {
-		let typedInput = ""
-		let textMuted = ""
-		let requiredVal = (curr.rules[0]) ? curr.rules.find(rule => rule==="required" || rule==="requiredSelect") : "" || ""
-		if(requiredVal) textMuted='<small class="text-muted">(必須)</small>'
+    return items.reduce((acc, curr) => {
+        let typedInput = ''
+        let textMuted = ''
+        let requiredVal = curr.rules[0]
+            ? curr.rules.find(
+                  (rule) => rule === 'required' || rule === 'requiredSelect'
+              )
+            : '' || ''
+        if (requiredVal) textMuted = '<small class="text-muted">(必須)</small>'
 
-		if(curr.type==="select"){
-			typedInput = `
+        if (curr.type === 'select') {
+            typedInput = `
 			<select id="${curr.id}" name="${curr.id}" class="form-control">
 				<?php foreach ($choices['${curr.id}'] as $key => $value) { ?>
 					<option value="<?php echo $key; ?>"<?php if ($key == $${curr.id}) { ?>selected<?php } ?>><?php echo $value; ?></option>
 				<?php } ?>
 			</select>
 			`
-		}else if(curr.type==="memo"){
-			typedInput = `<textarea id="${curr.id}" name="${curr.id}" class="form-control" rows="5" ${requiredVal}><?php echo $${curr.id}; ?></textarea>`
-		}else if(curr.type==="checkbox"){
-			typedInput = `<input type="checkbox" id="${curr.id}" name="${curr.id}" ${(curr.to) ? "checked" : ""}>`
-		}else{
-			typedInput = `<input type="text" id="${curr.id}" name="${curr.id}" value="<?php echo $${curr.id}; ?>" class="form-control" placeholder="" ${requiredVal}>`
-		}
+        } else if (curr.type === 'memo') {
+            typedInput = `<textarea id="${curr.id}" name="${curr.id}" class="form-control" rows="5" ${requiredVal}><?php echo $${curr.id}; ?></textarea>`
+        } else if (curr.type === 'checkbox') {
+            typedInput = `<input type="checkbox" id="${curr.id}" name="${
+                curr.id
+            }" ${curr.to ? 'checked' : ''}>`
+        } else {
+            typedInput = `<input type="text" id="${curr.id}" name="${curr.id}" value="<?php echo $${curr.id}; ?>" class="form-control" placeholder="" ${requiredVal}>`
+        }
 
-		acc += `
+        acc += `
 		<div class="form-group row">
 			<label for="name" class="col-sm-3 col-form-label">
 				${curr.label}
@@ -66,38 +72,37 @@ const createEnteredForm = (items) => {
 				${typedInput}
 			</div>
 		</div>\n`
-		return acc
-	}, "")
+        return acc
+    }, '')
 }
 
 //relatedIdsが空でない要素を配列で返す
 const findIndexes = (items) => {
-	let indexes = []
-	items.map((item) => {
-		if(item.relatedIds[0]) indexes.push(item.id)
-	})
-	return indexes.splice(1)
+    let indexes = []
+    items.map((item) => {
+        if (item.relatedIds[0]) indexes.push(item.id)
+    })
+    return indexes.splice(1)
 }
 
 const index = (items) => {
+    //relatedIdsが空でないもの
+    const relatedIdsItems = items.filter((item) => item.relatedIds[0])
 
-	//relatedIdsが空でないもの
-	const relatedIdsItems = items.filter(item => item.relatedIds[0])
+    //itemsのrelatedIdsが空でないものを一つにまとめる
+    const formItems = items.filter((item) => {
+        const pattern = new RegExp(findIndexes(items).join('|'))
+        return !pattern.test(item.id)
+    })
 
-	//itemsのrelatedIdsが空でないものを一つにまとめる
-	const formItems = items.filter(item => {
-		const pattern = new RegExp(findIndexes(items).join("|"))
-		return !pattern.test(item.id)
-	})
+    const hiddenInput = items.reduce((acc, curr) => {
+        acc += `<input type="hidden" name="action" value="<?php echo $${curr.id}; ?>">\n`
+        return acc
+    }, '')
+    const confirmForm = createConfirmForm(formItems, relatedIdsItems)
+    const enteredForm = createEnteredForm(formItems)
 
-	const hiddenInput = items.reduce((acc, curr) => {
-		acc += `<input type="hidden" name="action" value="<?php echo $${curr.id}; ?>">\n`
-		return acc
-	}, "")
-	const confirmForm = createConfirmForm(formItems, relatedIdsItems)
-	const enteredForm = createEnteredForm(formItems)
-
-	return `
+    return `
 	<!doctype html>
 	<html lang="ja">
 	<head>
