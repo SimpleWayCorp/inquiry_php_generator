@@ -1,5 +1,5 @@
 const base = (urlPath) => {
-return `
+    return `
 <?php
 
 class ControllerBase

@@ -57,7 +57,9 @@ const createEnteredForm = (items, relatedIdsItems) => {
         } else if (curr.type === 'checkbox') {
             typedInput = `
 			<div class="form-check">
-				<input type="checkbox" id="${curr.id}" name="${curr.id}" ${curr.to ? 'checked' : ''}>
+				<input type="checkbox" id="${curr.id}" name="${curr.id}" ${
+                curr.to ? 'checked' : ''
+            }>
 			</div>
 			`
         } else if (curr.relatedIds[0]) {

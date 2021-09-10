@@ -297,6 +297,7 @@
                             :change-typedform="changeTypedForm"
                             :update-is-file-change="updateIsFileChange"
                         ></form-item>
+                        {{ error }}
 
                         <div class="d-flex justify-content-center">
                             <button @click="addItem" class="btn btn-primary">
@@ -507,6 +508,7 @@ export default {
         },
         //フォルダー作成
         createFolder(zip, path) {
+            if (path.length === 0) return
             if (path.length === 1) {
                 return zip.folder(`${path[0]}`)
             } else {
@@ -654,6 +656,7 @@ export default {
             }
         },
         validationItemTemplate(inputName, e, index) {
+            console.log(inputName)
             if (Object.keys(e).length) {
                 if (!this.error.validation) {
                     this.$set(this.error, 'validation', {})
@@ -662,6 +665,7 @@ export default {
                     this.$set(this.error.validation, `item${index}`, {})
                 }
                 if (!this.error.validation[`item${index}`].validation) {
+                    console.log("create validation")
                     this.$set(
                         this.error.validation[`item${index}`],
                         'validation',
@@ -673,10 +677,25 @@ export default {
                     inputName,
                     e
                 )
+                console.log(this.error)
             } else if (
                 this.error.validation &&
-                this.error.validation[`item${index}`]
+                this.error.validation[`item${index}`] &&
+                this.error.validation[`item${index}`].validation &&
+                this.error.validation[`item${index}`].validation[inputName]
             ) {
+                console.log("delete item")
+                console.log(this.error)
+                delete this.error.validation[`item${index}`].validation[inputName]
+            }
+            
+            if (
+                this.error.validation &&
+                this.error.validation[`item${index}`] &&
+                this.error.validation[`item${index}`].validation &&
+                Object.keys(this.error.validation[`item${index}`].validation).length === 0
+            ) {
+                console.log(Object.keys(this.error.validation[`item${index}`].validation).length)
                 delete this.error.validation[`item${index}`]
             }
 
@@ -684,6 +703,7 @@ export default {
                 this.error.validation &&
                 Object.keys(this.error.validation).length === 0
             ) {
+                console.log("delete validation")
                 delete this.error.validation
             }
         },
@@ -717,10 +737,77 @@ export default {
             this.validateUrlPath()
             this.validateItems()
         },
+        createPublicFolder(zip, upperCamelUrl) {
+            const publicFolder = this.createFolder(
+                zip,
+                this.pathToArray(this.publicPath)
+            )
+            const publicUrlFolder = this.createFolder(
+                publicFolder,
+                this.pathToArray(this.urlPath)
+            )
+            publicUrlFolder.file(
+                'index.php',
+                publicIndex(
+                    upperCamelUrl,
+                    this.pathToArray(this.urlPath),
+                    this.privatePath
+                )
+            )
+        },
+        createBuildFolder(privateFolder, items) {
+            const BuildFolder = privateFolder.folder('Build')
+            const privateUrlFolder = this.createFolder(
+                BuildFolder,
+                this.pathToArray(this.urlPath)
+            )
+            privateUrlFolder.file(
+                'build_config.json',
+                buildConfig(
+                    this.formName,
+                    this.subject,
+                    this.from,
+                    this.bcc,
+                    this.publicPath,
+                    this.privatePath,
+                    this.urlPath,
+                    items
+                )
+            )
+        },
+        createAppFolder(privateFolder, upperCamelUrl, items) {
+            const AppFolder = privateFolder.folder('App')
+            const controller = AppFolder.folder('Controller')
+            const model = AppFolder.folder('Model')
+            const helper = AppFolder.folder('Helper')
+            const view = AppFolder.folder('View')
+            const viewUrlFolder = this.createFolder(
+                view,
+                this.pathToArray(this.urlPath)
+            )
+            const mail = viewUrlFolder.folder('mail')
+            //ファイル作成
+            AppFolder.file('config.php', config(this.from, this.bcc))
+            viewUrlFolder.file(`${upperCamelUrl}.php`, index(items))
+            mail.file('body.php', body)
+            mail.file('subject.php', subject)
+            controller.file(
+                `${upperCamelUrl}.php`,
+                controllerUrlPath(upperCamelUrl, this.urlPath)
+            )
+            controller.file('Base.php', controllerBase(this.urlPath))
+            model.file(
+                `${upperCamelUrl}.php`,
+                modelUrlPath(upperCamelUrl, items)
+            )
+            model.file('Base.php', modelBase)
+            //helper作成
+            this.createHelper(helper)
+        },
         //ダウンロード動作
         downLoad() {
             this.validation()
-            this.updateIsFileChange()
+            // this.updateIsFileChange()
 
             if (!this.error.validation) {
                 const zip = new JSZip()
@@ -728,80 +815,17 @@ export default {
                 const upperCamelUrl = this.toUpperCamel(this.urlPath)
 
                 //=============publicフォルダー作成==============
-                const publicFolder = this.createFolder(
-                    zip,
-                    this.pathToArray(this.publicPath)
-                )
-                const publicUrlFolder = this.createFolder(
-                    publicFolder,
-                    this.pathToArray(this.urlPath)
-                )
-                publicUrlFolder.file(
-                    'index.php',
-                    publicIndex(
-                        upperCamelUrl,
-                        this.pathToArray(this.urlPath),
-                        this.privatePath
-                    )
-                )
+                this.createPublicFolder(zip, upperCamelUrl)
 
                 //=============privateフォルダー作成==============
                 const privateFolder = this.createFolder(
                     zip,
                     this.pathToArray(this.privatePath)
                 )
-
                 //Buildフォルダー作成
-                const BuildFolder = privateFolder.folder('Build')
-                const privateUrlFolder = this.createFolder(
-                    BuildFolder,
-                    this.pathToArray(this.urlPath)
-                )
-                privateUrlFolder.file(
-                    'build_config.json',
-                    buildConfig(
-                        this.formName,
-                        this.subject,
-                        this.from,
-                        this.bcc,
-                        this.publicPath,
-                        this.privatePath,
-                        this.urlPath,
-                        items
-                    )
-                )
-
+                this.createBuildFolder(privateFolder, items)
                 //Appフォルダー作成
-                const AppFolder = privateFolder.folder('App')
-                const controller = AppFolder.folder('Controller')
-                const model = AppFolder.folder('Model')
-                const helper = AppFolder.folder('Helper')
-                const view = AppFolder.folder('View')
-                const viewUrlFolder = this.createFolder(
-                    view,
-                    this.pathToArray(this.urlPath)
-                )
-                const mail = viewUrlFolder.folder('mail')
-
-                //ファイル作成
-                AppFolder.file('config.php', config(this.from, this.bcc))
-                viewUrlFolder.file(`${upperCamelUrl}.php`, index(items))
-                mail.file('body.php', body)
-                mail.file('subject.php', subject)
-                controller.file(
-                    `${upperCamelUrl}.php`,
-                    controllerUrlPath(upperCamelUrl, this.urlPath)
-                )
-                controller.file('Base.php', controllerBase(this.urlPath))
-                model.file(
-                    `${upperCamelUrl}.php`,
-                    modelUrlPath(upperCamelUrl, items)
-                )
-                model.file('Base.php', modelBase)
-
-                //helper作成
-                this.createHelper(helper)
-
+                this.createAppFolder(privateFolder, upperCamelUrl, items)
                 zip.generateAsync({ type: 'blob' }).then(function (content) {
                     // see FileSaver.js
                     saveAs(content, 'example.zip')
