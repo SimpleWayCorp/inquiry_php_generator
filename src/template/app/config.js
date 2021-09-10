@@ -5,7 +5,7 @@ const config = (from, bccs) => {
     <?php
 
     $config = array(
-        'mail_from' => ${from},
+        'mail_from' => '${from}',
         'mail_bcc' => [${stringBcc}],
         'csrf_hash_key' => 'Xabva6fGHjuC',
     );`

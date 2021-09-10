@@ -1,6 +1,10 @@
 import createAppDir from '../index_appdir.js'
 
 const index = (upperCamelUrl, urlArray, privatePath) => {
+    console.log(createAppDir(
+        urlArray,
+        privatePath
+    ))
     return `
     <?php
     define('APP_DIR', dirname(__FILE__).'${createAppDir(

@@ -55,12 +55,14 @@ const createEnteredForm = (items, relatedIdsItems) => {
         } else if (curr.type === 'memo') {
             typedInput = `<textarea id="${curr.id}" name="${curr.id}" class="form-control" rows="5" ${requiredVal}><?php echo $${curr.id}; ?></textarea>`
         } else if (curr.type === 'checkbox') {
-            typedInput = `<input type="checkbox" id="${curr.id}" name="${
-                curr.id
-            }" ${curr.to ? 'checked' : ''}>`
+            typedInput = `
+			<div class="form-check">
+				<input type="checkbox" id="${curr.id}" name="${curr.id}" ${curr.to ? 'checked' : ''}>
+			</div>
+			`
         } else if (curr.relatedIds[0]) {
             typedInput = relatedIdsItems.reduce((acc, curr, currIndex) => {
-                if (relatedIdsItems.length - 1 === currIndex) {
+                if (relatedIdsItems.length - 1 !== currIndex) {
                     acc += `
 					<input type="text" id="${curr.id}" name="${curr.id}" value="<?php echo $${curr.id}; ?>" class="form-control" placeholder="090" ${requiredVal}>
 					<div class="input-group-prepend input-group-apend">
@@ -70,8 +72,7 @@ const createEnteredForm = (items, relatedIdsItems) => {
                 } else {
                     acc += `
 					<input type="text" id="${curr.id}" name="${curr.id}" value="<?php echo $${curr.id}; ?>" class="form-control" placeholder="090" ${requiredVal}>
-					</div>
-					`
+					</div>`
                 }
                 return acc
             }, '<div class="input-group">')

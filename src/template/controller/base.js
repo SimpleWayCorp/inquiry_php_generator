@@ -1,4 +1,5 @@
-const base = `
+const base = (urlPath) => {
+return `
 <?php
 
 class ControllerBase
@@ -28,7 +29,7 @@ class ControllerBase
 
     function render($template, $data = array())
     {
-        $path = APP_DIR.'View/'.$template;
+        $path = APP_DIR.'View${urlPath}'.$template;
         if (is_file($path))
         {
             extract($data);
@@ -41,4 +42,5 @@ class ControllerBase
     }
 }
 `
+}
 export default base

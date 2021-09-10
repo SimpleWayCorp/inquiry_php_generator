@@ -792,7 +792,7 @@ export default {
                     `${upperCamelUrl}.php`,
                     controllerUrlPath(upperCamelUrl, this.urlPath)
                 )
-                controller.file('Base.php', controllerBase)
+                controller.file('Base.php', controllerBase(this.urlPath))
                 model.file(
                     `${upperCamelUrl}.php`,
                     modelUrlPath(upperCamelUrl, items)
