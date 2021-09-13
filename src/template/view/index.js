@@ -66,14 +66,14 @@ const createEnteredForm = (items, relatedIdsItems) => {
             typedInput = relatedIdsItems.reduce((acc, curr, currIndex) => {
                 if (relatedIdsItems.length - 1 !== currIndex) {
                     acc += `
-					<input type="text" id="${curr.id}" name="${curr.id}" value="<?php echo $${curr.id}; ?>" class="form-control" placeholder="090" ${requiredVal}>
+					<input type="text" id="${curr.id}" name="${curr.id}" value="<?php echo $${curr.id}; ?>" class="form-control" placeholder="" ${requiredVal}>
 					<div class="input-group-prepend input-group-apend">
 						<div class="input-group-text">-</div>
 					</div>
 					`
                 } else {
                     acc += `
-					<input type="text" id="${curr.id}" name="${curr.id}" value="<?php echo $${curr.id}; ?>" class="form-control" placeholder="090" ${requiredVal}>
+					<input type="text" id="${curr.id}" name="${curr.id}" value="<?php echo $${curr.id}; ?>" class="form-control" placeholder="" ${requiredVal}>
 					</div>`
                 }
                 return acc

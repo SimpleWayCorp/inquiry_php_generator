@@ -665,7 +665,7 @@ export default {
                     this.$set(this.error.validation, `item${index}`, {})
                 }
                 if (!this.error.validation[`item${index}`].validation) {
-                    console.log("create validation")
+                    console.log('create validation')
                     this.$set(
                         this.error.validation[`item${index}`],
                         'validation',
@@ -684,18 +684,25 @@ export default {
                 this.error.validation[`item${index}`].validation &&
                 this.error.validation[`item${index}`].validation[inputName]
             ) {
-                console.log("delete item")
+                console.log('delete item')
                 console.log(this.error)
-                delete this.error.validation[`item${index}`].validation[inputName]
+                delete this.error.validation[`item${index}`].validation[
+                    inputName
+                ]
             }
-            
+
             if (
                 this.error.validation &&
                 this.error.validation[`item${index}`] &&
                 this.error.validation[`item${index}`].validation &&
-                Object.keys(this.error.validation[`item${index}`].validation).length === 0
+                Object.keys(this.error.validation[`item${index}`].validation)
+                    .length === 0
             ) {
-                console.log(Object.keys(this.error.validation[`item${index}`].validation).length)
+                console.log(
+                    Object.keys(
+                        this.error.validation[`item${index}`].validation
+                    ).length
+                )
                 delete this.error.validation[`item${index}`]
             }
 
@@ -703,7 +710,7 @@ export default {
                 this.error.validation &&
                 Object.keys(this.error.validation).length === 0
             ) {
-                console.log("delete validation")
+                console.log('delete validation')
                 delete this.error.validation
             }
         },
@@ -806,8 +813,9 @@ export default {
         },
         //ダウンロード動作
         downLoad() {
+            //項目componentを再描画
+            this.updateIsFileChange()
             this.validation()
-            // this.updateIsFileChange()
 
             if (!this.error.validation) {
                 const zip = new JSZip()
