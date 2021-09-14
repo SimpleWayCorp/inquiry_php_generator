@@ -1,4 +1,5 @@
 const createAppDir = (urlArray, privatePath) => {
+
     return urlArray.reduce((acc) => {
         acc = `/..${acc}`
         return acc

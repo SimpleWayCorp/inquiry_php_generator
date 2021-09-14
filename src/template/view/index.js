@@ -96,13 +96,13 @@ const createEnteredForm = (items, relatedIdsItems) => {
     }, '')
 }
 
-//relatedIdsが空でない要素を配列で返す
-const findIndexes = (items) => {
-    let indexes = []
+//relatedIdsが空でないitemsのidを配列で返す
+const findItemIdWithRelatedIds = (items) => {
+    let itemIds = []
     items.map((item) => {
-        if (item.relatedIds[0]) indexes.push(item.id)
+        if (item.relatedIds[0]) itemIds.push(item.id)
     })
-    return indexes.length !== 0 ? indexes.splice(1) : []
+    return itemIds.length !== 0 ? itemIds.splice(1) : []
 }
 
 const index = (items) => {
@@ -111,12 +111,16 @@ const index = (items) => {
 
     //itemsのrelatedIdsが空でないものを一つにまとめる
     const formItems = items.filter((item) => {
-        const pattern = new RegExp(`${findIndexes(items).join('|')}`)
-        return !pattern.test(item.id)
+		if (findItemIdWithRelatedIds(items).length) {
+			const pattern = new RegExp(`${findItemIdWithRelatedIds(items).join('|')}`)
+			return !pattern.test(item.id)
+		} else {
+			return true
+		}
     })
 
     const hiddenInput = items.reduce((acc, curr) => {
-        acc += `<input type="hidden" name="action" value="<?php echo $${curr.id}; ?>">\n`
+        acc += `<input type="hidden" name="${curr.id}" value="<?php echo $${curr.id}; ?>">\n`
         return acc
     }, '')
     const confirmForm = createConfirmForm(formItems, relatedIdsItems)

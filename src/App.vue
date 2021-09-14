@@ -297,7 +297,7 @@
                             :change-typedform="changeTypedForm"
                             :update-is-file-change="updateIsFileChange"
                         ></form-item>
-                        {{ error }}
+                        {{ items }}
 
                         <div class="d-flex justify-content-center">
                             <button @click="addItem" class="btn btn-primary">
@@ -419,7 +419,7 @@ export default {
                 })
                 return newItem
             })
-        },
+        }
     },
     methods: {
         updateIsFileChange() {
@@ -656,7 +656,6 @@ export default {
             }
         },
         validationItemTemplate(inputName, e, index) {
-            console.log(inputName)
             if (Object.keys(e).length) {
                 if (!this.error.validation) {
                     this.$set(this.error, 'validation', {})
@@ -665,7 +664,6 @@ export default {
                     this.$set(this.error.validation, `item${index}`, {})
                 }
                 if (!this.error.validation[`item${index}`].validation) {
-                    console.log('create validation')
                     this.$set(
                         this.error.validation[`item${index}`],
                         'validation',
@@ -677,15 +675,12 @@ export default {
                     inputName,
                     e
                 )
-                console.log(this.error)
             } else if (
                 this.error.validation &&
                 this.error.validation[`item${index}`] &&
                 this.error.validation[`item${index}`].validation &&
                 this.error.validation[`item${index}`].validation[inputName]
             ) {
-                console.log('delete item')
-                console.log(this.error)
                 delete this.error.validation[`item${index}`].validation[
                     inputName
                 ]
@@ -698,11 +693,6 @@ export default {
                 Object.keys(this.error.validation[`item${index}`].validation)
                     .length === 0
             ) {
-                console.log(
-                    Object.keys(
-                        this.error.validation[`item${index}`].validation
-                    ).length
-                )
                 delete this.error.validation[`item${index}`]
             }
 
@@ -710,7 +700,6 @@ export default {
                 this.error.validation &&
                 Object.keys(this.error.validation).length === 0
             ) {
-                console.log('delete validation')
                 delete this.error.validation
             }
         },
@@ -811,6 +800,12 @@ export default {
             //helper作成
             this.createHelper(helper)
         },
+        //pathの末尾に/がない場合は付与する
+        addSlashToPath() {
+            if (this.publicPath.slice(-1)!=='/') this.publicPath=`${this.publicPath}/`
+            if (this.privatePath.slice(-1)!=='/') this.privatePath=`${this.privatePath}/`
+            if (this.urlPath.slice(-1)!=='/') this.urlPath=`${this.urlPath}/`
+        },
         //ダウンロード動作
         downLoad() {
             //項目componentを再描画
@@ -819,6 +814,7 @@ export default {
 
             if (!this.error.validation) {
                 const zip = new JSZip()
+                this.addSlashToPath()
                 const items = this.convertRelatedIdsAndChoices
                 const upperCamelUrl = this.toUpperCamel(this.urlPath)
 
@@ -831,7 +827,7 @@ export default {
                     this.pathToArray(this.privatePath)
                 )
                 //Buildフォルダー作成
-                this.createBuildFolder(privateFolder, items)
+                this.createBuildFolder(privateFolder,items)
                 //Appフォルダー作成
                 this.createAppFolder(privateFolder, upperCamelUrl, items)
                 zip.generateAsync({ type: 'blob' }).then(function (content) {
