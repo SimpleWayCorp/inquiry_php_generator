@@ -8,12 +8,13 @@
                         <input
                             name="configFile"
                             type="file"
-                            @change="fileChange"
+                            @change="changeFile"
                             id="inputFile"
+                            class="w-100 mb-2"
+                            :class="{ 'is-invalid': fileError }"
                         />
-                        <label class="custom-file-label" for="inputFile"
-                            >Choose file</label
-                        >
+                        <span class="invalid-feedback">{{ fileError }}</span>
+                        <!-- <button class="btn btn-secondary">削除</button> -->
                     </div>
                 </div>
 
@@ -285,6 +286,7 @@
                 <div class="row mb-5">
                     <label class="col-2">項目</label>
                     <div v-if="isFileChange" class="col-10 p-0">
+
                         <form-item
                             v-for="(item, index) in items"
                             :key="index"
@@ -297,7 +299,6 @@
                             :change-typedform="changeTypedForm"
                             :update-is-file-change="updateIsFileChange"
                         ></form-item>
-                        {{ items }}
 
                         <div class="d-flex justify-content-center">
                             <button @click="addItem" class="btn btn-primary">
@@ -374,6 +375,7 @@ export default {
             typeValue: 1,
             isFileChange: true,
             error: {},
+            fileError: null
         }
     },
     computed: {
@@ -426,12 +428,31 @@ export default {
             this.isFileChange = false
             this.$nextTick(() => (this.isFileChange = true))
         },
-        fileChange(e) {
+        changeFile(e) {
             const files = e.target.files
+            this.fileError = null
+
             if (!files.length) {
                 return
             }
-            this.createForm(files[0])
+            if (this.checkFile(files[0])) {
+                this.createForm(files[0])
+            }
+        },
+        checkFile(files) {
+            let result = true
+            // const SIZE_LIMIT = 5000000
+
+            if (files.type !== 'application/json') {
+                this.fileError = 'jsonファイルをインポートしてください'
+                result = false
+            }
+            // if (files.size > SIZE_LIMIT) {
+            //     this.fileError = 'ファイルサイズが上限を超えました'
+            //     result = false
+            // }
+
+            return result
         },
         createForm(file) {
             const reader = new FileReader()
@@ -751,6 +772,13 @@ export default {
                 )
             )
         },
+        createHelper(helper) {
+            helper.file('Csrf.php', csrf)
+            helper.file('Mail.php', mail)
+            helper.file('Sanitize.php', sanitize)
+            helper.file('Template.php', template)
+            helper.file('Validation.php', validation)
+        },
         createBuildFolder(privateFolder, items) {
             const BuildFolder = privateFolder.folder('Build')
             const privateUrlFolder = this.createFolder(
@@ -835,14 +863,7 @@ export default {
                     saveAs(content, 'example.zip')
                 })
             }
-        },
-        createHelper(helper) {
-            helper.file('Csrf.php', csrf)
-            helper.file('Mail.php', mail)
-            helper.file('Sanitize.php', sanitize)
-            helper.file('Template.php', template)
-            helper.file('Validation.php', validation)
-        },
+        }
     },
 }
 </script>
