@@ -286,7 +286,6 @@
                 <div class="row mb-5">
                     <label class="col-2">項目</label>
                     <div v-if="isFileChange" class="col-10 p-0">
-
                         <form-item
                             v-for="(item, index) in items"
                             :key="index"
@@ -375,7 +374,7 @@ export default {
             typeValue: 1,
             isFileChange: true,
             error: {},
-            fileError: null
+            fileError: null,
         }
     },
     computed: {
@@ -421,7 +420,7 @@ export default {
                 })
                 return newItem
             })
-        }
+        },
     },
     methods: {
         updateIsFileChange() {
@@ -768,7 +767,8 @@ export default {
                 publicIndex(
                     upperCamelUrl,
                     this.pathToArray(this.urlPath),
-                    this.privatePath
+                    this.privatePath,
+                    this.publicPath
                 )
             )
         },
@@ -830,9 +830,12 @@ export default {
         },
         //pathの末尾に/がない場合は付与する
         addSlashToPath() {
-            if (this.publicPath.slice(-1)!=='/') this.publicPath=`${this.publicPath}/`
-            if (this.privatePath.slice(-1)!=='/') this.privatePath=`${this.privatePath}/`
-            if (this.urlPath.slice(-1)!=='/') this.urlPath=`${this.urlPath}/`
+            if (this.publicPath.slice(-1) !== '/')
+                this.publicPath = `${this.publicPath}/`
+            if (this.privatePath.slice(-1) !== '/')
+                this.privatePath = `${this.privatePath}/`
+            if (this.urlPath.slice(-1) !== '/')
+                this.urlPath = `${this.urlPath}/`
         },
         //ダウンロード動作
         downLoad() {
@@ -855,7 +858,7 @@ export default {
                     this.pathToArray(this.privatePath)
                 )
                 //Buildフォルダー作成
-                this.createBuildFolder(privateFolder,items)
+                this.createBuildFolder(privateFolder, items)
                 //Appフォルダー作成
                 this.createAppFolder(privateFolder, upperCamelUrl, items)
                 zip.generateAsync({ type: 'blob' }).then(function (content) {
@@ -863,7 +866,7 @@ export default {
                     saveAs(content, 'example.zip')
                 })
             }
-        }
+        },
     },
 }
 </script>

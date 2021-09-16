@@ -1,10 +1,29 @@
 import createAppDir from '../index_appdir.js'
 
-const index = (upperCamelUrl, urlArray, privatePath) => {
+const determineReferencePoint = (privatePath, publicPath) => {
+    const privateArray = privatePath.slice(1, -1).split('/')
+    const publicArray = publicPath.slice(1, -1).split('/')
+    let numberOfLevel = 0
+
+    for (let i = 0; i < privateArray.length; i++) {
+        if (privateArray[i] !== publicArray[i]) {
+            numberOfLevel = i + 1
+            break
+        }
+    }
+
+    return publicArray.length - numberOfLevel
+}
+
+const index = (upperCamelUrl, urlArray, privatePath, publicPath) => {
+    console.log(determineReferencePoint(privatePath, publicPath))
+    const numberOfDirectoryMoves =
+        urlArray.length + determineReferencePoint(privatePath, publicPath)
+
     return `
     <?php
     define('APP_DIR', dirname(__FILE__).'${createAppDir(
-        urlArray,
+        numberOfDirectoryMoves,
         privatePath
     )}');
 

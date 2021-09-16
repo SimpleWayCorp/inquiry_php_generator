@@ -111,12 +111,14 @@ const index = (items) => {
 
     //itemsのrelatedIdsが空でないものを一つにまとめる
     const formItems = items.filter((item) => {
-		if (findItemIdWithRelatedIds(items).length) {
-			const pattern = new RegExp(`${findItemIdWithRelatedIds(items).join('|')}`)
-			return !pattern.test(item.id)
-		} else {
-			return true
-		}
+        if (findItemIdWithRelatedIds(items).length) {
+            const pattern = new RegExp(
+                `${findItemIdWithRelatedIds(items).join('|')}`
+            )
+            return !pattern.test(item.id)
+        } else {
+            return true
+        }
     })
 
     const hiddenInput = items.reduce((acc, curr) => {
